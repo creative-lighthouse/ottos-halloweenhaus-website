@@ -107,7 +107,7 @@ class WikiPageController extends PageController
         return ['MediaProject' => $mediaProject];
     }
 
-    public function music(HTTPRequest $request = null)
+    public function music(?HTTPRequest $request = null)
     {
         if (!$request) {
             return WikiMusic::get()->sort('PublicationDate DESC');
