@@ -11,8 +11,8 @@ use SilverStripe\Forms\DropdownField;
  * @property ?string $Text
  * @property ?string $VideoLink
  * @property ?string $Width
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

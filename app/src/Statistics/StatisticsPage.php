@@ -7,8 +7,8 @@ use Page;
 /**
  * Class \App\Statistics\StatisticsPage
  *
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

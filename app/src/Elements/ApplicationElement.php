@@ -16,8 +16,8 @@ use SilverStripe\Security\SecurityToken;
  *
  * @property ?string $Text
  * @property ?string $SuccessText
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

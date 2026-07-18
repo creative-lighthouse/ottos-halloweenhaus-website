@@ -15,8 +15,8 @@ use SilverStripe\ORM\DataObject;
  * @property float $BuyPrice
  * @property int $ImageID
  * @method Image Image()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

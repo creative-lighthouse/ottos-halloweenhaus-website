@@ -9,16 +9,16 @@
         }
     ],
     "require": {
-        "php": "^8.3",
+        "php": "^8.5",
         "ext-json": "*",
-        "silverstripe/recipe-cms": "^6.1",
-        "silverstripe/framework": "^6.1",
-        "dnadesign/silverstripe-elemental": "^6.1",
+        "silverstripe/recipe-plugin": "^2",
+        "silverstripe/recipe-cms": "^6.2",
+        "dnadesign/silverstripe-elemental": "^6.2",
         "colymba/gridfield-bulk-editing-tools": "^5.1.0",
         "jonom/focuspoint": "^6.0",
         "silverstripe/login-forms": "^6.1",
         "purplespider/silverstripe-basic-gallery-extension": "^5.0",
-        "silverstripe/linkfield": "^5.1",
+        "silverstripe/linkfield": "^5.2",
         "wilr/silverstripe-googlesitemaps": "^4.0",
         "dnadesign/silverstripe-elemental-userforms": "^5.0.0",
         "undefinedoffset/sortablegridfield": "^3.0",
@@ -28,11 +28,10 @@
         "plastyk/dashboard": "^5.0",
         "stevenpaw/stevens-silverstripe-icons": "dev-main",
         "atwx/silverstripe-element-overview": "^1.0",
-        "stevenpaw/silverstripe-sociallink": "6.x-dev",
+        "stevenpaw/silverstripe-sociallink": "dev-main",
         "stevenpaw/silverstripe-cms-backend-theme": "^1.1"
     },
     "require-dev": {
-        "silverleague/ideannotator": "4.0",
         "wernerkrauss/silverstripe-rector": "^1",
         "cambis/silverstan": "^2",
         "phpstan/extension-installer": "^1.0"

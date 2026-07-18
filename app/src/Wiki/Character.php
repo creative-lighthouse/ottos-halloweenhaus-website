@@ -29,8 +29,8 @@ use SilverStripe\Model\List\GroupedList;
  * @method ManyManyList<WikiMusic> Music()
  * @mixin PhotoGalleryExtension
  * @mixin WikiSlugExtension
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

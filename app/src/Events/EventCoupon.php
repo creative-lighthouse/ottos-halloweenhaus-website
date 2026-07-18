@@ -16,8 +16,8 @@ use SilverStripe\Forms\DropdownField;
  * @property ?string $Hash
  * @property int $UsedCount
  * @property int $MaxUses
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

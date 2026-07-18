@@ -13,8 +13,8 @@ use SilverStripe\ORM\DataObject;
  * @property float $Stars
  * @property ?string $Comment
  * @property ?string $PLZ
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

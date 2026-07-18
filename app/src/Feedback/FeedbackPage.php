@@ -7,8 +7,8 @@ use Page;
 /**
  * Class \App\Feedback\FeedbackPage
  *
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

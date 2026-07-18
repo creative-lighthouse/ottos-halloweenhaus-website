@@ -18,8 +18,8 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * @property ?string $DateFrameText
  * @property ?string $DateFrameSubText
  * @method DataList<HeroSliderItem> HeroSliderItems()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

@@ -33,8 +33,8 @@ use Endroid\QrCode\ErrorCorrectionLevel;
  * @method Event Event()
  * @method EventTimeSlot TimeSlot()
  * @method EventCoupon UsedCoupon()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

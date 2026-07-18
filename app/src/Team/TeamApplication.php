@@ -18,8 +18,8 @@ use SilverStripe\ORM\DataObject;
  * @property ?string $ReasonToJoin
  * @property ?string $Status
  * @method ManyManyList<TeamApplicationInterest> Interests()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

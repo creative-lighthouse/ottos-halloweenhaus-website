@@ -13,8 +13,8 @@ use SilverStripe\Forms\DropdownField;
  * @property int $SortOrder
  * @property int $ParentID
  * @method SocialBannerElement Parent()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

@@ -16,8 +16,8 @@ use SilverStripe\ORM\DataObject;
  * @property int $CharacterID
  * @method Artefact Parent()
  * @method Character Character()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

@@ -12,8 +12,8 @@ use SilverStripe\Forms\DropdownField;
  *
  * @property ?string $Title
  * @method ManyManyList<TeamApplication> Applications()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

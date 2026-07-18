@@ -11,8 +11,8 @@ use SilverStripe\Model\ArrayData;
  * Class \App\Elements\ReferencesElement
  *
  * @property ?string $Text
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

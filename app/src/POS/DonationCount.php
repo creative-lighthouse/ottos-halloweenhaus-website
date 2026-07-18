@@ -11,8 +11,8 @@ use SilverStripe\ORM\DataObject;
  * @property float $Amount
  * @property ?string $CountDateTime
  * @property ?string $Source
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

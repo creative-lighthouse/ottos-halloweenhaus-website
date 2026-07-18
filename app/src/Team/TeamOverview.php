@@ -12,8 +12,8 @@ use SilverStripe\AssetAdmin\Forms\UploadField;
  *
  * @property int $HeaderImageID
  * @method Image HeaderImage()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

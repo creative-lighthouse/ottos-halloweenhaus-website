@@ -27,8 +27,8 @@ use SilverStripe\Model\List\ArrayList;
  * @property int $ImageID
  * @method Image Image()
  * @method DataList<EventTimeSlot> TimeSlots()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

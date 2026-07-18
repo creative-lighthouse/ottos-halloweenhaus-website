@@ -15,8 +15,8 @@ use SilverStripe\Security\Permission;
  * @property int $SortOrder
  * @property int $ParentID
  * @method FactElement Parent()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

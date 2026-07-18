@@ -9,8 +9,8 @@ use DNADesign\Elemental\Models\BaseElement;
  * Class \App\Elements\TimelineElement
  *
  * @property ?string $Content
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

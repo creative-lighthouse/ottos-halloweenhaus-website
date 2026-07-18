@@ -10,8 +10,8 @@ use SilverStripe\ORM\DataObject;
  * @property ?string $EntryTime
  * @property int $SQ
  * @property int $VQ
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

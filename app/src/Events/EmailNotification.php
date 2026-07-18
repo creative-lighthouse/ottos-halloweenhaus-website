@@ -21,8 +21,8 @@ use SilverStripe\SiteConfig\SiteConfig;
  * @method Event Event()
  * @method Registration Registration()
  * @method File Attachment()
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

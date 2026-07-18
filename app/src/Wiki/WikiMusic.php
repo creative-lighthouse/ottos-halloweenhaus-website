@@ -29,8 +29,8 @@ use SilverStripe\ORM\DataObject;
  * @method ManyManyList<Character> Characters()
  * @method ManyManyList<MediaProject> MediaProjects()
  * @mixin WikiSlugExtension
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension

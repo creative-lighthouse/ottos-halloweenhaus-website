@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\Set\ValueObject\LevelSetList;
 use Netwerkstatt\SilverstripeRector\Rector\DataObject\EnsureTableNameIsSetRector;
 use Netwerkstatt\SilverstripeRector\Set\SilverstripeSetList;
 use Netwerkstatt\SilverstripeRector\Set\SilverstripeLevelSetList;
@@ -15,12 +16,12 @@ return RectorConfig::configure()
     //    ->withPreparedSets(deadCode: true)
     ->withSets([
         //rector lists
-        //        LevelSetList::UP_TO_PHP_83,
-        //        SetList::CODE_QUALITY,
-        //        SetList::CODING_STYLE,
+        LevelSetList::UP_TO_PHP_85,
+        // SetList::CODE_QUALITY,
+        // SetList::CODING_STYLE,
         //silverstripe rector
-        SilverstripeSetList::CODE_STYLE,
-        SilverstripeLevelSetList::UP_TO_SS_5_4
+        // SilverstripeSetList::CODE_STYLE,
+        SilverstripeLevelSetList::UP_TO_SS_6_2
     ])
     ->withRules([
         //        EnsureTableNameIsSetRector::class,

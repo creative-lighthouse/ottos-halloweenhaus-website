@@ -8,8 +8,8 @@ use DNADesign\Elemental\Models\BaseElement;
  * Class \App\Elements\EmbedElement
  *
  * @property ?string $EmbedCode
- * @mixin AssetControlExtension
  * @mixin FileLinkTracking
+ * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
  * @mixin RecursivePublishable
  * @mixin VersionedStateExtension
