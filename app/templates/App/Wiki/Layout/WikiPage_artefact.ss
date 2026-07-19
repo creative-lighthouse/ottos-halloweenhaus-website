@@ -68,7 +68,7 @@
                         <% loop $Owners %>
                             <a href="$Link" class="charactercard" style="view-transition-name: charactercard-$Character.ID;">
                                 <div class="charactercard_image" style="view-transition-name: characterimage-$Character.ID;">
-                                    $Character.Image.FocusFill(200,200)
+                                    $Character.Image.FocusFill(300,300)
                                 </div>
                                 <div class="charactercard_content">
                                     <h3 class="charactercard_name">$Character.Title</h3>

@@ -97,7 +97,7 @@
                         <% loop $Locations %>
                             <a href="$Top.Link/location/$ID" class="locationcard" style="view-transition-name: locationcard-$ID;">
                                 <div class="locationcard_image">
-                                    $Image.FocusFill(200,200)
+                                    $Image.FocusFill(300,300)
                                 </div>
                                 <div class="locationcard_content">
                                     <h3 class="locationcard_name">$Title</h3>
