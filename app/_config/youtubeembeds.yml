@@ -1,0 +1,11 @@
+---
+Name: app-youtube-embeds
+After: '#corefieldtypes'
+---
+SilverStripe\Core\Injector\Injector:
+  HTMLText:
+    class: App\ORM\FieldType\DBSecureHTMLText
+    properties:
+      ProcessShortcodes: true
+  HTMLFragment:
+    class: App\ORM\FieldType\DBSecureHTMLText

@@ -75,6 +75,7 @@ section.section--TimelineElement {
                     width: 100%;
 
                     .list_item_content_title{
+                        margin: 5px 0 10px 0;
                         &:hover{
                             color: var(--ColorWhite);
                         }
