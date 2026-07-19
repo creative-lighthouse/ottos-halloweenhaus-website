@@ -13,7 +13,6 @@ namespace {
  * @property int $ElementalAreaID
  * @method ElementalArea ElementalArea()
  * @mixin ElementalPageExtension
- * @mixin DashboardSearchResultExtension
  * @mixin FileLinkTracking
  * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "13f0eb14ba0d17cde431f9bc95955afc",
+    "content-hash": "5d9d2fcd86c87375240851fca2cc0254",
     "packages": [
         {
             "name": "atwx/silverstripe-element-overview",
@@ -2461,70 +2461,6 @@
                 "source": "https://github.com/oscarotero/html-parser/tree/v0.1.8"
             },
             "time": "2023-11-29T20:28:41+00:00"
-        },
-        {
-            "name": "plastyk/dashboard",
-            "version": "5.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/plastyk/silverstripe-dashboard.git",
-                "reference": "fa83a5f4d35437e9cc6f5e2eb340f95d01277c81"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/plastyk/silverstripe-dashboard/zipball/fa83a5f4d35437e9cc6f5e2eb340f95d01277c81",
-                "reference": "fa83a5f4d35437e9cc6f5e2eb340f95d01277c81",
-                "shasum": ""
-            },
-            "require": {
-                "silverstripe/admin": "^3.0",
-                "silverstripe/framework": "^6.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^11.3",
-                "squizlabs/php_codesniffer": "*"
-            },
-            "type": "silverstripe-vendormodule",
-            "extra": {
-                "expose": [
-                    "css",
-                    "javascript"
-                ],
-                "installer-name": "dashboard"
-            },
-            "autoload": {
-                "psr-4": {
-                    "Plastyk\\Dashboard\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "3dgoo",
-                    "email": "michael@3dgoo.com"
-                },
-                {
-                    "name": "Turnerj",
-                    "email": "git@turnerj.com"
-                },
-                {
-                    "name": "Plastyk Studios",
-                    "email": "howdy@plastyk.com.au"
-                }
-            ],
-            "description": "An extendable dashboard for Silverstripe",
-            "keywords": [
-                "dashboard",
-                "silverstripe"
-            ],
-            "support": {
-                "issues": "https://github.com/plastyk/silverstripe-dashboard/issues",
-                "source": "https://github.com/plastyk/silverstripe-dashboard/tree/5.0.1"
-            },
-            "time": "2025-07-08T11:54:20+00:00"
         },
         {
             "name": "psr/cache",
@@ -8181,8 +8117,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "stevenpaw/silverstripe-sociallink": 20,
-        "stevenpaw/stevens-silverstripe-icons": 20
+        "stevenpaw/stevens-silverstripe-icons": 20,
+        "stevenpaw/silverstripe-sociallink": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -8190,6 +8126,6 @@
         "php": "^8.5",
         "ext-json": "*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
 }

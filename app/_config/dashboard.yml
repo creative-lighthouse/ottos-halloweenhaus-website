@@ -1,9 +1,0 @@
----
-Name: app-dashboard
----
-Plastyk\Dashboard\Admin\DashboardAdmin:
-  contact_email: "kontakt@halloweenhaus-schmalenbeck.de"
-  contact_name: "Halloweenhaus Schmalenbeck"
-  panel_accent_color: "#390083"
-Page:
-  dashboard_automatic_search_redirect: true
