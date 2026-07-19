@@ -128,17 +128,18 @@
                 @include media(max-medium) {
                     max-height: 0;
                     overflow: hidden;
-                    position: absolute;
+                    position: fixed;
                     top: 100px;
                     left: 0;
                     height: 50px;
-                    width: 100%;
+                    width: 100dvw;
                     display: flex;
                     justify-content: center;
                     backdrop-filter: blur(0px);
-                    transition: 0.2s ease-in-out;
+                    transition: max-height 0.2s ease-in-out, opacity 0.2s ease-in-out;
                     background-color: rgba(0, 0, 0, 0.3);
                     padding-right: 0;
+                    max-width: 100%;
 
                     .menu--fixed &{
                         top: 50px;
@@ -163,6 +164,7 @@
             .nav_secondarymenu{
                 opacity: 0;
                 width: 100%;
+                max-width: 400px;
                 flex-direction: column;
                 position: absolute;
                 top: calc(100% + 25px);
@@ -191,9 +193,12 @@
                 }
 
                 @include media(max-medium) {
-                    width: 100%;
+                    transition: max-height 0.2s ease-in-out, opacity 0.2s ease-in-out;
+                    position: fixed;
+                    width: 100dvw;
                     left: 0;
                     top: 150px;
+                    max-width: 100%;
                     border-top-left-radius: 0;
                     border-top-right-radius: 0;
                 }
