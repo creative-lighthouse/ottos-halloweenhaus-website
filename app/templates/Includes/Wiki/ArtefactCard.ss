@@ -1,7 +1,7 @@
 <a href="$Link" class="artefactcard" style="view-transition-name: artefactcard-$ID;">
     <div class="artefactcard_image" style="view-transition-name: artefactimage-$ID;">
         <% if $Image %>
-            $Image.FocusFill(200,200)
+            $Image.FocusFill(300,300)
         <% else %>
             <img src="_resources/app/client/images/placeholder-image.jpg" alt="Kein Bild verfügbar" style="width: 100%; height: 100%; object-fit: cover;">
         <% end_if %>
