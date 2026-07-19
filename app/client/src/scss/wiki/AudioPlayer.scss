@@ -61,6 +61,62 @@
         white-space: nowrap;
     }
 
+    .audioplayer-volume {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-left: 4px;
+
+        .audioplayer-volume-icon {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .audioplayer-volume-popup {
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--ColorGray);
+            border-radius: 6px;
+            box-shadow: var(--BoxShadow);
+            padding: 8px 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease, visibility 0.15s ease;
+        }
+
+        .audioplayer-volume-slider {
+            width: 54px;
+            transform: rotate(-90deg);
+            accent-color: var(--ColorPrimary);
+            cursor: pointer;
+        }
+
+        &:hover, &:focus-within {
+            .audioplayer-volume-icon {
+                opacity: 1;
+            }
+
+            .audioplayer-volume-popup {
+                opacity: 1;
+                visibility: visible;
+            }
+        }
+    }
+
     &.audioplayer--playing {
 
         .audioplayer-button, .audioplayer-rewind {

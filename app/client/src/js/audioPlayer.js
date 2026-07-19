@@ -8,6 +8,13 @@ function formatTime(seconds) {
 // Wird von initYoutubeAudioPlayers gesetzt damit reguläre Player das Modal schließen können
 let _closeActiveYtModal = null;
 
+const VOLUME_STORAGE_KEY = 'audioplayer-volume';
+
+function getStoredVolume() {
+    const stored = parseFloat(localStorage.getItem(VOLUME_STORAGE_KEY));
+    return isNaN(stored) ? 1 : Math.min(1, Math.max(0, stored));
+}
+
 export function initAudioPlayers() {
     document.querySelectorAll('.audioplayer:not(.yt-audioplayer)').forEach(player => {
         const soundfileUrl = player.dataset.soundfile;
@@ -16,8 +23,11 @@ export function initAudioPlayers() {
         const button = player.querySelector('.audioplayer-button');
         const rewindBtn = player.querySelector('.audioplayer-rewind');
         const positionDisplay = player.querySelector('.audioplayer-position');
+        const volumeSlider = player.querySelector('.audioplayer-volume-slider');
 
         let audio = null;
+        let currentVolume = getStoredVolume();
+        volumeSlider.value = currentVolume;
 
         rewindBtn.classList.add('audioplayer-rewind--inactive');
 
@@ -41,18 +51,32 @@ export function initAudioPlayers() {
             player.classList.toggle('audioplayer--playing', playing);
         }
 
+        function createAudio() {
+            const a = new Audio();
+            a.preload = 'metadata';
+            a.volume = currentVolume;
+            a.src = soundfileUrl;
+            a.addEventListener('timeupdate', updatePosition);
+            a.addEventListener('loadedmetadata', updatePosition);
+            a.addEventListener('ended', () => {
+                setPlaying(false);
+                updatePosition();
+            });
+            return a;
+        }
+
+        // Auf Detailseiten wird die Spielzeit direkt beim Laden angezeigt,
+        // auf Übersichtsseiten erst beim Abspielen (viele Player gleichzeitig).
+        if (player.dataset.preload === 'true') {
+            audio = createAudio();
+        }
+
         button.addEventListener('click', e => {
             e.preventDefault();
             e.stopPropagation();
 
             if (!audio) {
-                audio = new Audio(soundfileUrl);
-                audio.addEventListener('timeupdate', updatePosition);
-                audio.addEventListener('loadedmetadata', updatePosition);
-                audio.addEventListener('ended', () => {
-                    setPlaying(false);
-                    updatePosition();
-                });
+                audio = createAudio();
             }
 
             if (audio.paused) {
@@ -74,6 +98,14 @@ export function initAudioPlayers() {
             if (!audio || rewindBtn.classList.contains('audioplayer-rewind--inactive')) return;
             audio.currentTime = 0;
             updatePosition();
+        });
+
+        volumeSlider.addEventListener('click', e => e.stopPropagation());
+        volumeSlider.addEventListener('input', e => {
+            e.stopPropagation();
+            currentVolume = parseFloat(e.target.value);
+            localStorage.setItem(VOLUME_STORAGE_KEY, currentVolume);
+            if (audio) audio.volume = currentVolume;
         });
     });
 }

@@ -22,7 +22,7 @@
                 <% end_if %>
                 <% if $SoundFile %>
                     <div class="wikimusic_audioplayer">
-                        <% include Includes/AudioPlayer SoundFile=$SoundFile %>
+                        <% include Includes/AudioPlayer SoundFile=$SoundFile, Preload=true %>
                     </div>
                 <% else_if $MusicVideoLink %>
                     <div class="wikimusic_audioplayer">
