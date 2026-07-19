@@ -1,12 +1,13 @@
 @use "../../variables" as *;
 
 .section.section--TeamOverview {
+    margin-top: 100px;
+
     .section_content{
 
         text-align: center;
         .teammember_title{
             padding-top: 30px;
-            padding-bottom: 20px;
         }
 
         .teammember_list{
@@ -21,7 +22,7 @@
                 justify-content: flex-start;
                 align-items: center;
                 padding: 10px;
-                
+
                 .teammember_texts{
                     color: var(--ColorWhite);
                     text-align: center;
@@ -38,7 +39,7 @@
                             height: 100%;
                             object-fit: cover;
                             transition: transform 0.3s ease-in-out;
-                        }                        
+                        }
                     }
 
                     .teammember_item_name{

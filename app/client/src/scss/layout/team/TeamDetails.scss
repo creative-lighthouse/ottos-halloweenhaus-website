@@ -16,6 +16,7 @@ section.section--TeamDetails {
             padding: 10px;
             margin: -10px;
             margin-bottom: 20px;
+            max-width: var(--MaxWidthSmall);
 
             &::before{
                 content:"";
@@ -26,12 +27,12 @@ section.section--TeamDetails {
                 height: 10px;
                 transform-origin: center;
                 transform: rotate(45deg);
+                transition: transform 0.3s ease-in-out;
             }
 
             &:hover {
                 &::before {
-                    border-bottom: 2px solid var(--ColorPrimaryLight);
-                    border-left: 2px solid var(--ColorPrimaryLight);
+                    transform: translateX(-10px) rotate(45deg) scale(1.2);
                 }
             }
         }
