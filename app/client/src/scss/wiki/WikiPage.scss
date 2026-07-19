@@ -91,6 +91,7 @@ section.section--WikiPage{
         .showsection{
             background-color: var(--ColorGray);
             border-radius: 10px;
+            isolation: isolate;
 
             h2{
                 margin: 0 0 20px 0;
