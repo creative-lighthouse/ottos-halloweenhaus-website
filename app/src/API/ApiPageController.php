@@ -26,6 +26,8 @@ use App\ImageBooth\BoothImage;
 use App\Events\Event;
 use App\Events\EntryLog;
 use App\Events\Registration;
+use App\Feedback\FeedbackEntry;
+use App\Statistics\PostalCodeResolver;
 use App\Team\TeamMember;
 use App\Wiki\Artefact;
 use App\Wiki\Character;
@@ -311,6 +313,23 @@ class ApiPageController extends ContentController
 
 
     //STATISTICS API
+
+    /**
+     * Builds a SilverStripe ORM filter array restricting $column to the given year.
+     * $year === null or "all" means no restriction (full history).
+     */
+    private function getYearDateFilter(string $column, ?string $year): array
+    {
+        if (!$year || $year === "all") {
+            return [];
+        }
+
+        return [
+            "$column:GreaterThanOrEqual" => "$year-01-01",
+            "$column:LessThanOrEqual" => "$year-12-31",
+        ];
+    }
+
     public function statistics(HTTPRequest $request)
     {
         $this->response->addHeader('Content-Type', 'application/json');
@@ -320,29 +339,39 @@ class ApiPageController extends ContentController
         $type = $_GET["type"];
 
         switch ($type) {
+            case "Dashboard":
+                $years = isset($_GET["years"]) ? array_filter(explode(",", $_GET["years"])) : [];
+                if (!$years) {
+                    $years = [date("Y")];
+                }
+                return $this->getStat_Dashboard($years);
+                break;
+            case "AvailableYears":
+                return $this->getStat_AvailableYears();
+                break;
             case "GuestsThisYear":
-                return $this->getStat_GuestsThisYear();
+                return $this->getStat_GuestsThisYear(date("Y"));
                 break;
             case "GuestsPerDay":
-                return $this->getStat_GuestsPerDay();
+                return $this->getStat_GuestsPerDay(date("Y"));
                 break;
             case "SalesPerDay":
-                return $this->getStat_SalesPerDay();
+                return $this->getStat_SalesPerDay(date("Y"));
                 break;
             case "ProfitsPerDay":
-                return $this->getStat_ProfitsPerDay();
+                return $this->getStat_ProfitsPerDay(date("Y"));
                 break;
             case "RegistrationsPerDay":
-                return $this->getStat_RegistrationsPerDay();
+                return $this->getStat_RegistrationsPerDay(date("Y"));
                 break;
             case "GuestsPerHour":
-                return $this->getStat_GuestsPerHour();
+                return $this->getStat_GuestsPerHour(date("Y"));
                 break;
             case "RegistrationsPerHour":
-                return $this->getStat_RegistrationsPerHour();
+                return $this->getStat_RegistrationsPerHour(date("Y"));
                 break;
             case "SalesPerHour":
-                return $this->getStat_SalesPerHour();
+                return $this->getStat_SalesPerHour(date("Y"));
                 break;
             case "VQRegistrationsPerDay":
                 return $this->getStat_VQRegistrationsPerDay();
@@ -358,13 +387,229 @@ class ApiPageController extends ContentController
         }
     }
 
-    public function getStat_GuestsThisYear()
+    /**
+     * Combined payload for the Vue statistics dashboard: every section, once per
+     * requested year (ByYear) and once averaged across all of them (Combined), so the
+     * frontend can plot a line per selected year plus a "Durchschnitt" line in the same
+     * chart. TotalGuests/ZIP origins stay summed (a total across years, not a per-day
+     * rate); FeedbackRatingPerDay is already a weighted average from the merge.
+     */
+    public function getStat_Dashboard(array $years)
+    {
+        $byYear = [];
+        $combined = null;
+
+        foreach ($years as $year) {
+            $section = $this->buildDashboardSection((string)$year);
+            $combined = $combined === null ? $section : $this->mergeDashboardSections($combined, $section);
+            $section["RegistrationOriginByZIP"] = $this->enrichZipList($section["RegistrationOriginByZIP"]);
+            $section["FeedbackOriginByZIP"] = $this->enrichZipList($section["FeedbackOriginByZIP"]);
+            $byYear[(int)$year] = $section;
+        }
+
+        $yearCount = count($years);
+        if ($combined !== null) {
+            $combined["GuestsPerDay"] = $this->averageTripletDict($combined["GuestsPerDay"], $yearCount);
+            $combined["SalesPerDay"] = $this->averageNumberDict($combined["SalesPerDay"], $yearCount);
+            $combined["ProfitsPerDay"] = $this->averageNumberDict($combined["ProfitsPerDay"], $yearCount);
+            $combined["RegistrationsPerDay"] = $this->averageNumberDict($combined["RegistrationsPerDay"], $yearCount);
+            $combined["GuestsPerHour"] = $this->averageTripletDict($combined["GuestsPerHour"], $yearCount);
+            $combined["RegistrationsPerHour"] = $this->averageNumberDict($combined["RegistrationsPerHour"], $yearCount);
+            $combined["SalesPerHour"] = $this->averageNumberDict($combined["SalesPerHour"], $yearCount);
+            $combined["RegistrationOriginByZIP"] = $this->enrichZipList($combined["RegistrationOriginByZIP"]);
+            $combined["FeedbackOriginByZIP"] = $this->enrichZipList($combined["FeedbackOriginByZIP"]);
+        }
+
+        return json_encode([
+            "Years" => array_map('intval', $years),
+            "Combined" => $combined,
+            "ByYear" => $byYear,
+        ]);
+    }
+
+    /**
+     * Adds resolved Ort/Kreis/Bundesland to each {ZIP, Number} entry, backed by the
+     * PostalCodeLookup DB cache (see PostalCodeResolver) so this never repeatedly calls
+     * the external OpenPLZ API for postal codes it has already seen.
+     */
+    private function enrichZipList(array $entries): array
+    {
+        $plzList = array_map(fn($entry) => (string)$entry['ZIP'], $entries);
+        $resolved = PostalCodeResolver::create()->resolveMany($plzList);
+
+        foreach ($entries as &$entry) {
+            $plz = (string)$entry['ZIP'];
+            if ($plz === '') {
+                $entry['Ort'] = 'Unbekannt';
+                $entry['Kreis'] = 'Unbekannt';
+                $entry['Bundesland'] = 'Unbekannt';
+                continue;
+            }
+            $location = $resolved[$plz] ?? null;
+            $entry['Ort'] = $location['Ort'] ?? $plz;
+            $entry['Kreis'] = $location['Kreis'] ?? $plz;
+            $entry['Bundesland'] = $location['Bundesland'] ?? $plz;
+        }
+        unset($entry);
+
+        return $entries;
+    }
+
+    private function averageNumberDict(array $dict, int $count): array
+    {
+        if ($count <= 1) {
+            return $dict;
+        }
+        $result = [];
+        foreach ($dict as $key => $value) {
+            $result[$key] = round($value / $count, 2);
+        }
+        return $result;
+    }
+
+    private function averageTripletDict(array $dict, int $count): array
+    {
+        if ($count <= 1) {
+            return $dict;
+        }
+        $result = [];
+        foreach ($dict as $key => $triplet) {
+            $result[$key] = [
+                'VQ' => round($triplet['VQ'] / $count, 2),
+                'SQ' => round($triplet['SQ'] / $count, 2),
+                'TT' => round($triplet['TT'] / $count, 2),
+            ];
+        }
+        return $result;
+    }
+
+    private function buildDashboardSection(string $year): array
+    {
+        return [
+            "TotalGuests" => json_decode($this->getStat_GuestsThisYear($year), true)["GuestsThisYear"],
+            "GuestsPerDay" => json_decode($this->getStat_GuestsPerDay($year), true),
+            "SalesPerDay" => json_decode($this->getStat_SalesPerDay($year), true),
+            "ProfitsPerDay" => json_decode($this->getStat_ProfitsPerDay($year), true),
+            "RegistrationsPerDay" => json_decode($this->getStat_RegistrationsPerDay($year), true),
+            "GuestsPerHour" => json_decode($this->getStat_GuestsPerHour($year), true),
+            "RegistrationsPerHour" => json_decode($this->getStat_RegistrationsPerHour($year), true),
+            "SalesPerHour" => json_decode($this->getStat_SalesPerHour($year), true),
+            "RegistrationOriginByZIP" => json_decode($this->getStat_RegistrationOriginByZIP($year), true),
+            "FeedbackOriginByZIP" => json_decode($this->getStat_FeedbackOriginByZIP($year), true),
+            "FeedbackRatingPerDay" => json_decode($this->getStat_FeedbackRatingPerDay($year), true),
+            "FeedbackComments" => json_decode($this->getStat_FeedbackComments($year), true),
+        ];
+    }
+
+    private function mergeDashboardSections(array $a, array $b): array
+    {
+        return [
+            "TotalGuests" => $this->mergeCountTriplet($a["TotalGuests"], $b["TotalGuests"]),
+            "GuestsPerDay" => $this->mergeTripletDict($a["GuestsPerDay"], $b["GuestsPerDay"]),
+            "SalesPerDay" => $this->mergeNumberDict($a["SalesPerDay"], $b["SalesPerDay"]),
+            "ProfitsPerDay" => $this->mergeNumberDict($a["ProfitsPerDay"], $b["ProfitsPerDay"]),
+            "RegistrationsPerDay" => $this->mergeNumberDict($a["RegistrationsPerDay"], $b["RegistrationsPerDay"]),
+            "GuestsPerHour" => $this->mergeTripletDict($a["GuestsPerHour"], $b["GuestsPerHour"]),
+            "RegistrationsPerHour" => $this->mergeNumberDict($a["RegistrationsPerHour"], $b["RegistrationsPerHour"]),
+            "SalesPerHour" => $this->mergeNumberDict($a["SalesPerHour"], $b["SalesPerHour"]),
+            "RegistrationOriginByZIP" => $this->mergeZipList($a["RegistrationOriginByZIP"], $b["RegistrationOriginByZIP"]),
+            "FeedbackOriginByZIP" => $this->mergeZipList($a["FeedbackOriginByZIP"], $b["FeedbackOriginByZIP"]),
+            "FeedbackRatingPerDay" => $this->mergeRatingDict($a["FeedbackRatingPerDay"], $b["FeedbackRatingPerDay"]),
+            "FeedbackComments" => array_merge($a["FeedbackComments"], $b["FeedbackComments"]),
+        ];
+    }
+
+    private function mergeCountTriplet(array $a, array $b): array
+    {
+        return [
+            'VQ' => $a['VQ'] + $b['VQ'],
+            'SQ' => $a['SQ'] + $b['SQ'],
+            'TT' => $a['TT'] + $b['TT'],
+        ];
+    }
+
+    private function mergeTripletDict(array $a, array $b): array
+    {
+        $result = $a;
+        foreach ($b as $key => $triplet) {
+            $result[$key] = isset($result[$key]) ? $this->mergeCountTriplet($result[$key], $triplet) : $triplet;
+        }
+        ksort($result);
+        return $result;
+    }
+
+    private function mergeNumberDict(array $a, array $b): array
+    {
+        $result = $a;
+        foreach ($b as $key => $value) {
+            $result[$key] = ($result[$key] ?? 0) + $value;
+        }
+        ksort($result);
+        return $result;
+    }
+
+    private function mergeZipList(array $a, array $b): array
+    {
+        $grouped = [];
+        foreach (array_merge($a, $b) as $entry) {
+            $zip = $entry['ZIP'];
+            $grouped[$zip] = ($grouped[$zip] ?? 0) + $entry['Number'];
+        }
+
+        arsort($grouped);
+
+        $result = [];
+        foreach ($grouped as $zip => $number) {
+            $result[] = ['ZIP' => $zip, 'Number' => $number];
+        }
+        return $result;
+    }
+
+    private function mergeRatingDict(array $a, array $b): array
+    {
+        $result = $a;
+        foreach ($b as $day => $entry) {
+            if (!isset($result[$day])) {
+                $result[$day] = $entry;
+                continue;
+            }
+            $count = $result[$day]['Count'] + $entry['Count'];
+            $stars = $result[$day]['AverageStars'] * $result[$day]['Count'] + $entry['AverageStars'] * $entry['Count'];
+            $result[$day] = [
+                'AverageStars' => $count ? round($stars / $count, 2) : 0,
+                'Count' => $count,
+            ];
+        }
+        ksort($result);
+        return $result;
+    }
+
+    public function getStat_AvailableYears()
+    {
+        $years = [];
+        $columnsByTable = [
+            "EntryLog" => "EntryTime",
+            "Registration" => "Created",
+        ];
+
+        foreach ($columnsByTable as $table => $column) {
+            $result = \SilverStripe\ORM\DB::query(
+                "SELECT DISTINCT YEAR(\"$column\") AS Y FROM \"$table\" WHERE \"$column\" IS NOT NULL"
+            );
+            foreach ($result as $row) {
+                $years[(int)$row['Y']] = true;
+            }
+        }
+
+        krsort($years);
+
+        return json_encode(array_keys($years));
+    }
+
+    public function getStat_GuestsThisYear(?string $year = null)
     {
         //Get all entry logs
-        $entryLogs = EntryLog::get()->filter(array(
-            "EntryTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "EntryTime:LessThanOrEqual" => date("Y-12-31"),
-        ));
+        $entryLogs = EntryLog::get()->filter($this->getYearDateFilter("EntryTime", $year));
 
         //Calculate People by groupsize of registrations
         $data['GuestsThisYear'] = [
@@ -384,19 +629,16 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_GuestsPerDay()
+    public function getStat_GuestsPerDay(?string $year = null)
     {
         //Get all entry logs
-        $entryLogs = EntryLog::get()->filter(array(
-            "EntryTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "EntryTime:LessThanOrEqual" => date("Y-12-31"),
-        ));
+        $entryLogs = EntryLog::get()->filter($this->getYearDateFilter("EntryTime", $year));
 
         //Split the entry logs into days
         $days = [];
 
         foreach ($entryLogs as $entryLog) {
-            $day = date("Y-m-d", strtotime($entryLog->EntryTime));
+            $day = date("m-d", strtotime($entryLog->EntryTime));
             if (!isset($days[$day])) {
                 $days[$day] = [
                     'VQ' => $entryLog->VQ,
@@ -418,19 +660,16 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_RegistrationsPerDay()
+    public function getStat_RegistrationsPerDay(?string $year = null)
     {
         //Get all entry logs
-        $registrations = Registration::get()->filter(array(
-            "Event.EventDate:GreaterThanOrEqual" => date("Y-01-01"),
-            "Event.EventDate:LessThanOrEqual" => date("Y-12-31"),
-        ));
+        $registrations = Registration::get()->filter($this->getYearDateFilter("Event.EventDate", $year));
 
         //Split the entry logs into days
         $days = [];
 
         foreach ($registrations as $registration) {
-            $day = date("Y-m-d", strtotime($registration->Created));
+            $day = date("m-d", strtotime($registration->Created));
             if (!isset($days[$day])) {
                 $days[$day] = $registration->GroupSize;
             } else {
@@ -446,13 +685,10 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_SalesPerDay()
+    public function getStat_SalesPerDay(?string $year = null)
     {
         //Get all entry logs
-        $sales = Sale::get()->filter(array(
-            "SaleTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "SaleTime:LessThanOrEqual" => date("Y-12-31"),
-        ));
+        $sales = Sale::get()->filter($this->getYearDateFilter("SaleTime", $year));
 
         //Split the entry logs into days
         $days = [];
@@ -462,7 +698,7 @@ class ApiPageController extends ContentController
             foreach ($sale->ProductSales() as $productSale) {
                 $productamount += (int)$productSale->Amount;
             }
-            $day = date("Y-m-d", strtotime($sale->SaleTime));
+            $day = date("m-d", strtotime($sale->SaleTime));
             if (!isset($days[$day])) {
                 $days[$day] = $productamount;
             } else {
@@ -478,18 +714,12 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_ProfitsPerDay()
+    public function getStat_ProfitsPerDay(?string $year = null)
     {
         //Get all entry logs
-        $sales = Sale::get()->filter(array(
-            "SaleTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "SaleTime:LessThanOrEqual" => date("Y-12-31"),
-        ));
+        $sales = Sale::get()->filter($this->getYearDateFilter("SaleTime", $year));
 
-        $donationCounts = DonationCount::get()->filter(array(
-            "CountDateTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "CountDateTime:LessThanOrEqual" => date("Y-12-31"),
-        ));
+        $donationCounts = DonationCount::get()->filter($this->getYearDateFilter("CountDateTime", $year));
 
         //Split the entry logs into days
         $days = [];
@@ -499,7 +729,7 @@ class ApiPageController extends ContentController
             foreach ($sale->ProductSales() as $productSale) {
                 $profit += (float)$productSale->Amount * ((float)$productSale->SellingPrice - (float)$productSale->Product()->BuyPrice);
             }
-            $day = date("Y-m-d", strtotime($sale->SaleTime));
+            $day = date("m-d", strtotime($sale->SaleTime));
             if (!isset($days[$day])) {
                 $days[$day] = $profit;
             } else {
@@ -508,7 +738,7 @@ class ApiPageController extends ContentController
         }
 
         foreach ($donationCounts as $donationCount) {
-            $day = date("Y-m-d", strtotime($donationCount->CountDateTime));
+            $day = date("m-d", strtotime($donationCount->CountDateTime));
             if (!isset($days[$day])) {
                 $days[$day] = $donationCount->Amount;
             } else {
@@ -524,19 +754,16 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_RegistrationsPerHour()
+    public function getStat_RegistrationsPerHour(?string $year = null)
     {
         //Get all registrations for this year
-        $registrations = Registration::get()->filter(array(
-            "Event.EventDate:GreaterThanOrEqual" => date("Y-01-01"),
-            "Event.EventDate:LessThanOrEqual" => date("Y-12-31"),
-        ))->sort("Created");
+        $registrations = Registration::get()->filter($this->getYearDateFilter("Event.EventDate", $year))->sort("Created");
 
         //Split the registrations into hours
         $hours = [];
 
         foreach ($registrations as $registration) {
-            $hour = date("Y-m-d H:00", strtotime($registration->Created));
+            $hour = date("m-d H:00", strtotime($registration->Created));
             if (!isset($hours[$hour])) {
                 $hours[$hour] = $registration->GroupSize;
             } else {
@@ -549,19 +776,16 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_GuestsPerHour()
+    public function getStat_GuestsPerHour(?string $year = null)
     {
         //Get all entry logs
-        $entryLogs = EntryLog::get()->filter(array(
-            "EntryTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "EntryTime:LessThanOrEqual" => date("Y-12-31"),
-        ))->sort("EntryTime");
+        $entryLogs = EntryLog::get()->filter($this->getYearDateFilter("EntryTime", $year))->sort("EntryTime");
 
         //Split the entry logs into hours
         $hours = [];
 
         foreach ($entryLogs as $entryLog) {
-            $hour = date("Y-m-d H:00", strtotime($entryLog->EntryTime));
+            $hour = date("m-d H:00", strtotime($entryLog->EntryTime));
             if (!isset($hours[$hour])) {
                 $hours[$hour] = [
                     'VQ' => $entryLog->VQ,
@@ -580,13 +804,10 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
-    public function getStat_SalesPerHour()
+    public function getStat_SalesPerHour(?string $year = null)
     {
         //Get all entry logs
-        $sales = Sale::get()->filter(array(
-            "SaleTime:GreaterThanOrEqual" => date("Y-01-01"),
-            "SaleTime:LessThanOrEqual" => date("Y-12-31"),
-        ))->sort("SaleTime");
+        $sales = Sale::get()->filter($this->getYearDateFilter("SaleTime", $year))->sort("SaleTime");
 
         //Split the entry logs into hours
         $hours = [];
@@ -596,7 +817,7 @@ class ApiPageController extends ContentController
             foreach ($sale->ProductSales() as $productSale) {
                 $productamount += (int)$productSale->Amount;
             }
-            $hour = date("Y-m-d H:00", strtotime($sale->SaleTime));
+            $hour = date("m-d H:00", strtotime($sale->SaleTime));
             if (!isset($hours[$hour])) {
                 $hours[$hour] = $productamount;
             } else {
@@ -605,6 +826,99 @@ class ApiPageController extends ContentController
         }
 
         $data = $hours;
+
+        return json_encode($data);
+    }
+
+    public function getStat_RegistrationOriginByZIP(?string $year = null)
+    {
+        $registrations = Registration::get()->filter($this->getYearDateFilter("Created", $year))->sort(['ZIP' => 'ASC']);
+
+        $grouped = [];
+        foreach ($registrations as $registration) {
+            $zip = $registration->ZIP ?? '';
+            if (!isset($grouped[$zip])) {
+                $grouped[$zip] = 0;
+            }
+            $grouped[$zip] += $registration->GroupSize;
+        }
+
+        arsort($grouped);
+
+        $data = [];
+        foreach ($grouped as $zip => $count) {
+            $data[] = ['ZIP' => $zip, 'Number' => $count];
+        }
+
+        return json_encode($data);
+    }
+
+    public function getStat_FeedbackOriginByZIP(?string $year = null)
+    {
+        $feedbacks = FeedbackEntry::get()->filter($this->getYearDateFilter("Created", $year))->sort(['PLZ' => 'ASC']);
+
+        $grouped = [];
+        foreach ($feedbacks as $feedback) {
+            $plz = $feedback->PLZ ?? '';
+            if (!isset($grouped[$plz])) {
+                $grouped[$plz] = 0;
+            }
+            $grouped[$plz]++;
+        }
+
+        arsort($grouped);
+
+        $data = [];
+        foreach ($grouped as $zip => $count) {
+            $data[] = ['ZIP' => $zip, 'Number' => $count];
+        }
+
+        return json_encode($data);
+    }
+
+    public function getStat_FeedbackRatingPerDay(?string $year = null)
+    {
+        $feedbacks = FeedbackEntry::get()->filter($this->getYearDateFilter("Created", $year));
+
+        $days = [];
+        foreach ($feedbacks as $f) {
+            $d = $f->Day ? date("m-d", strtotime($f->Day)) : '';
+            if (!isset($days[$d])) {
+                $days[$d] = ['stars' => 0, 'count' => 0];
+            }
+            $days[$d]['stars'] += $f->Stars;
+            $days[$d]['count']++;
+        }
+
+        ksort($days);
+
+        $data = [];
+        foreach ($days as $d => $v) {
+            $data[$d] = [
+                'AverageStars' => $v['count'] ? round($v['stars'] / $v['count'], 2) : 0,
+                'Count' => $v['count'],
+            ];
+        }
+
+        return json_encode($data);
+    }
+
+    public function getStat_FeedbackComments(?string $year = null)
+    {
+        $filter = array_merge($this->getYearDateFilter("Created", $year), [
+            'Comment:Not' => ['', null],
+        ]);
+        $feedbacks = FeedbackEntry::get()->filter($filter)->sort('Created', 'DESC');
+
+        $data = [];
+        foreach ($feedbacks as $feedback) {
+            $data[] = [
+                'Comment' => $feedback->Comment,
+                'Day' => $feedback->Day ? date('d.m.', strtotime($feedback->Day)) : '',
+                'Year' => $feedback->Day ? (int)date('Y', strtotime($feedback->Day)) : null,
+                'Stars' => $feedback->Stars,
+            ];
+        }
 
         return json_encode($data);
     }
