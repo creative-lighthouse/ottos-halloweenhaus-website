@@ -25,6 +25,16 @@
             flex-wrap: wrap;
             gap: 10px;
             margin-bottom: $gap;
+            padding: 10px 0;
+
+            // Sticks below the site header (fixed, 100px tall - shrinks to 50px once
+            // .menu--fixed kicks in on scroll, which has always already happened by the
+            // time this bar reaches the top). z-index stays under the header's 100.
+            position: sticky;
+            top: 50px;
+            z-index: 90;
+            background-color: rgba(21, 21, 21, 0.9);
+            backdrop-filter: blur(8px);
         }
 
         .statistics_yearchip{
@@ -123,6 +133,16 @@
             justify-content: center;
             gap: 10px;
             margin-top: $gap;
+            padding: 10px 0;
+
+            // Sticks directly below the (also sticky) year filter, using its measured
+            // height - see yearFilterHeight in StatisticsApp.vue - since that bar can
+            // wrap to multiple rows depending on year count and viewport width.
+            position: sticky;
+            top: calc(50px + var(--year-filter-height, 60px) + 12px);
+            z-index: 85;
+            background-color: rgba(21, 21, 21, 0.9);
+            backdrop-filter: blur(8px);
 
             label{
                 font-size: 15px;

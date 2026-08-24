@@ -10,7 +10,7 @@ function toPoint(key, value) {
     return { x: new Date(2000, month - 1, day, hour), y: value };
 }
 
-function toSeries(dict, valueKey) {
+export function toSeries(dict, valueKey) {
     return Object.entries(dict || {}).map(([key, raw]) => toPoint(key, valueKey ? raw[valueKey] : raw));
 }
 

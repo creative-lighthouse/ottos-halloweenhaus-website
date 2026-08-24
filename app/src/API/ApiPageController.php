@@ -361,8 +361,14 @@ class ApiPageController extends ContentController
             case "ProfitsPerDay":
                 return $this->getStat_ProfitsPerDay(date("Y"));
                 break;
+            case "DonationsBySource":
+                return $this->getStat_DonationsBySource(date("Y"));
+                break;
             case "RegistrationsPerDay":
                 return $this->getStat_RegistrationsPerDay(date("Y"));
+                break;
+            case "RegistrationAttendance":
+                return $this->getStat_RegistrationAttendance(date("Y"));
                 break;
             case "GuestsPerHour":
                 return $this->getStat_GuestsPerHour(date("Y"));
@@ -419,6 +425,8 @@ class ApiPageController extends ContentController
             $combined["RegistrationOriginByZIP"] = $this->enrichZipList($combined["RegistrationOriginByZIP"]);
             $combined["FeedbackOriginByZIP"] = $this->enrichZipList($combined["FeedbackOriginByZIP"]);
         }
+        // DonationsBySource stays summed across years (a total per source), same as
+        // TotalGuests/ZIP origins - not a per-day rate that would need averaging.
 
         return json_encode([
             "Years" => array_map('intval', $years),
@@ -490,7 +498,9 @@ class ApiPageController extends ContentController
             "GuestsPerDay" => json_decode($this->getStat_GuestsPerDay($year), true),
             "SalesPerDay" => json_decode($this->getStat_SalesPerDay($year), true),
             "ProfitsPerDay" => json_decode($this->getStat_ProfitsPerDay($year), true),
+            "DonationsBySource" => json_decode($this->getStat_DonationsBySource($year), true),
             "RegistrationsPerDay" => json_decode($this->getStat_RegistrationsPerDay($year), true),
+            "RegistrationAttendance" => json_decode($this->getStat_RegistrationAttendance($year), true),
             "GuestsPerHour" => json_decode($this->getStat_GuestsPerHour($year), true),
             "RegistrationsPerHour" => json_decode($this->getStat_RegistrationsPerHour($year), true),
             "SalesPerHour" => json_decode($this->getStat_SalesPerHour($year), true),
@@ -508,7 +518,9 @@ class ApiPageController extends ContentController
             "GuestsPerDay" => $this->mergeTripletDict($a["GuestsPerDay"], $b["GuestsPerDay"]),
             "SalesPerDay" => $this->mergeNumberDict($a["SalesPerDay"], $b["SalesPerDay"]),
             "ProfitsPerDay" => $this->mergeNumberDict($a["ProfitsPerDay"], $b["ProfitsPerDay"]),
+            "DonationsBySource" => $this->mergeNumberDict($a["DonationsBySource"], $b["DonationsBySource"]),
             "RegistrationsPerDay" => $this->mergeNumberDict($a["RegistrationsPerDay"], $b["RegistrationsPerDay"]),
+            "RegistrationAttendance" => $this->mergeAttendanceTriplet($a["RegistrationAttendance"], $b["RegistrationAttendance"]),
             "GuestsPerHour" => $this->mergeTripletDict($a["GuestsPerHour"], $b["GuestsPerHour"]),
             "RegistrationsPerHour" => $this->mergeNumberDict($a["RegistrationsPerHour"], $b["RegistrationsPerHour"]),
             "SalesPerHour" => $this->mergeNumberDict($a["SalesPerHour"], $b["SalesPerHour"]),
@@ -525,6 +537,15 @@ class ApiPageController extends ContentController
             'VQ' => $a['VQ'] + $b['VQ'],
             'SQ' => $a['SQ'] + $b['SQ'],
             'TT' => $a['TT'] + $b['TT'],
+        ];
+    }
+
+    private function mergeAttendanceTriplet(array $a, array $b): array
+    {
+        return [
+            'Registered' => $a['Registered'] + $b['Registered'],
+            'CheckedIn' => $a['CheckedIn'] + $b['CheckedIn'],
+            'NoShow' => $a['NoShow'] + $b['NoShow'],
         ];
     }
 
@@ -685,6 +706,36 @@ class ApiPageController extends ContentController
         return json_encode($data);
     }
 
+    /**
+     * Registered vs. checked-in people per year, in GroupSize (people, not registration
+     * rows) - same unit as RegistrationsPerDay. Cancelled registrations are excluded
+     * entirely: a cancellation is a known non-attendance, not a no-show.
+     */
+    public function getStat_RegistrationAttendance(?string $year = null)
+    {
+        $registrations = Registration::get()->filter($this->getYearDateFilter("Event.EventDate", $year));
+
+        $registered = 0;
+        $checkedIn = 0;
+        foreach ($registrations as $registration) {
+            if ($registration->Status === "Cancelled") {
+                continue;
+            }
+            $registered += $registration->GroupSize;
+            if ($registration->Status === "CheckedIn") {
+                $checkedIn += $registration->GroupSize;
+            }
+        }
+
+        $data = [
+            'Registered' => $registered,
+            'CheckedIn' => $checkedIn,
+            'NoShow' => $registered - $checkedIn,
+        ];
+
+        return json_encode($data);
+    }
+
     public function getStat_SalesPerDay(?string $year = null)
     {
         //Get all entry logs
@@ -752,6 +803,43 @@ class ApiPageController extends ContentController
         $data = $days;
 
         return json_encode($data);
+    }
+
+    /**
+     * Donation totals grouped by DonationCount.Source (e.g. "Spendenschädel",
+     * "Spendentruhe", "SumUp", "ko-fi"), sorted by amount descending. Source is a free-text
+     * field, so known casing/spelling variants get folded together via
+     * normalizeDonationSource() before grouping.
+     */
+    public function getStat_DonationsBySource(?string $year = null)
+    {
+        $donationCounts = DonationCount::get()->filter($this->getYearDateFilter("CountDateTime", $year));
+
+        $grouped = [];
+        foreach ($donationCounts as $donationCount) {
+            $source = $this->normalizeDonationSource((string)$donationCount->Source);
+            $grouped[$source] = ($grouped[$source] ?? 0) + (float)$donationCount->Amount;
+        }
+
+        arsort($grouped);
+
+        return json_encode($grouped);
+    }
+
+    private function normalizeDonationSource(string $source): string
+    {
+        $source = trim($source);
+        if ($source === '') {
+            return 'Unbekannt';
+        }
+
+        $key = strtolower(str_replace('-', '', $source));
+        $canonical = [
+            'sumup' => 'SumUp',
+            'kofi' => 'Ko-fi',
+        ];
+
+        return $canonical[$key] ?? $source;
     }
 
     public function getStat_RegistrationsPerHour(?string $year = null)

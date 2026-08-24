@@ -133,7 +133,7 @@ function render() {
                 x: {
                     grid: { color: CHART_GRID_COLOR },
                     border: { color: CHART_AXIS_COLOR },
-                    ticks: { color: CHART_TEXT_MUTED },
+                    ticks: { color: CHART_TEXT_MUTED, precision: 0 },
                 },
                 y: {
                     grid: { display: false },
