@@ -3,6 +3,7 @@ import Swiper from 'swiper/bundle';
 import "./eventsNavigator";
 import "./posSystem";
 import "./statisticsPage";
+import "./ticketPage";
 import "./glossar.js";
 import { initYoutubeConsent } from "./youtubeConsent.js";
 import { initAudioPlayers, initYoutubeAudioPlayers } from "./audioPlayer.js";
@@ -555,20 +556,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
         }
     }
 
-    const scanCode = document.querySelector('[data-behaviour="scancode"]');
-        const sectionStatus = document.querySelector('[data-behaviour="sectionStatus"]');
-
-    if (scanCode != null) {
-
-        scanCode.addEventListener('click', () => {
-            scanCode.classList.add("highlighted");
-            sectionStatus.classList.add("outofway");
-            setTimeout(() => {
-                scanCode.classList.remove("highlighted");
-                sectionStatus.classList.remove("outofway");
-            }, 5000);
-        });
-    }
 });
 
 function parallax() {

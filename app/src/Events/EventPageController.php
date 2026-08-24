@@ -5,6 +5,7 @@ namespace App\Events;
 use PageController;
 use App\Events\Event;
 use App\Events\Registration;
+use SilverStripe\ORM\DB;
 use SilverStripe\Forms\Form;
 use App\Feedback\FeedbackPage;
 use SilverStripe\Control\Middleware\HTTPCacheControlMiddleware;
@@ -49,6 +50,7 @@ class EventPageController extends PageController
         "unsubscribe",
         "unsubscribesuccessful",
         "ticket",
+        "ticketdata",
         "validateticket",
         "checkcoupon",
         "error"
@@ -155,35 +157,53 @@ class EventPageController extends PageController
         $zip = $data["PLZ"];
         $couponcode = $data["Couponcode"];
 
-        $registrations = Registration::get()->filter([
-            "EventID" => $event->ID,
-            "TimeSlotID" => $timeslot->ID,
-            "UsedCouponID" => 0,
-        ]);
-        $timeslotRegistrationCount = 0;
-        foreach ($registrations as $registration) {
-            $timeslotRegistrationCount += $registration->GroupSize;
-        }
+        $result = null;
 
-        $vipRegistrations = Registration::get()->filter([
-            "EventID" => $event->ID,
-            "TimeSlotID" => $timeslot->ID,
-            "UsedCouponID:not" => 0,
-        ]);
-        $timeslotVIPRegistrationCount = 0;
-        foreach ($vipRegistrations as $registration) {
-            $timeslotVIPRegistrationCount += $registration->GroupSize;
-        }
+        DB::get_conn()->withTransaction(function () use (
+            $event,
+            $timeslot,
+            $groupsize,
+            $zip,
+            $couponcode,
+            $data,
+            &$result
+        ) {
+            // Locks the timeslot row so concurrent bookings for the same slot are
+            // serialized instead of racing past the capacity check below.
+            DB::query('SELECT "ID" FROM "EventTimeSlot" WHERE "ID" = ' . (int) $timeslot->ID . ' FOR UPDATE');
 
-        if ($couponcode) {
-            $coupon = EventCoupon::get()->filter("Hash", $couponcode)->First();
-            if (!$coupon) {
-                return $this->redirect($this->Link("couponinvalid/$event->ID"));
+            $registrations = Registration::get()->filter([
+                "EventID" => $event->ID,
+                "TimeSlotID" => $timeslot->ID,
+                "UsedCouponID" => 0,
+            ]);
+            $timeslotRegistrationCount = 0;
+            foreach ($registrations as $registration) {
+                $timeslotRegistrationCount += $registration->GroupSize;
             }
 
-            if (($timeslotVIPRegistrationCount + $groupsize) > $timeslot->MaxVIPs) {
-                return $this->redirect($this->Link("registrationfull/$event->ID/$timeslot->ID"));
-            } else {
+            $vipRegistrations = Registration::get()->filter([
+                "EventID" => $event->ID,
+                "TimeSlotID" => $timeslot->ID,
+                "UsedCouponID:not" => 0,
+            ]);
+            $timeslotVIPRegistrationCount = 0;
+            foreach ($vipRegistrations as $registration) {
+                $timeslotVIPRegistrationCount += $registration->GroupSize;
+            }
+
+            if ($couponcode) {
+                $coupon = EventCoupon::get()->filter("Hash", $couponcode)->First();
+                if (!$coupon) {
+                    $result = $this->redirect($this->Link("couponinvalid/$event->ID"));
+                    return;
+                }
+
+                if (($timeslotVIPRegistrationCount + $groupsize) > $timeslot->MaxVIPs) {
+                    $result = $this->redirect($this->Link("registrationfull/$event->ID/$timeslot->ID"));
+                    return;
+                }
+
                 $registration = Registration::create();
                 $registration->EventID = $event->ID;
                 $registration->TimeSlotID = $timeslot->ID;
@@ -200,26 +220,30 @@ class EventPageController extends PageController
 
                 $registration->write();
 
-                return $this->redirect($this->Link("registrationsuccessful/$event->ID/$registration->Hash"));
+                $result = $this->redirect($this->Link("registrationsuccessful/$event->ID/$registration->Hash"));
+                return;
             }
-        } else {
-            if (($timeslotRegistrationCount + $groupsize) > $timeslot->MaxAttendees) {
-                return $this->redirect($this->Link("registrationfull/$event->ID/$timeslot->ID"));
-            } else {
-                $registration = Registration::create();
-                $registration->EventID = $event->ID;
-                $registration->TimeSlotID = $timeslot->ID;
-                $registration->GroupSize = $groupsize;
-                $registration->ZIP = $zip;
-                $registration->Title = $data["Title"];
-                $registration->Email = $data["Email"];
-                $registration->Hash = md5($data["Email"] . $event->ID . $timeslot->ID . $groupsize . date("Y-m-d H:i:s"));
-                $registration->Status = "Registered";
-                $registration->write();
 
-                return $this->redirect($this->Link("registrationsuccessful/$event->ID/$registration->Hash"));
+            if (($timeslotRegistrationCount + $groupsize) > $timeslot->MaxAttendees) {
+                $result = $this->redirect($this->Link("registrationfull/$event->ID/$timeslot->ID"));
+                return;
             }
-        }
+
+            $registration = Registration::create();
+            $registration->EventID = $event->ID;
+            $registration->TimeSlotID = $timeslot->ID;
+            $registration->GroupSize = $groupsize;
+            $registration->ZIP = $zip;
+            $registration->Title = $data["Title"];
+            $registration->Email = $data["Email"];
+            $registration->Hash = md5($data["Email"] . $event->ID . $timeslot->ID . $groupsize . date("Y-m-d H:i:s"));
+            $registration->Status = "Registered";
+            $registration->write();
+
+            $result = $this->redirect($this->Link("registrationsuccessful/$event->ID/$registration->Hash"));
+        });
+
+        return $result;
     }
 
     public function registrationsuccessful(HTTPRequest $request)
@@ -279,8 +303,16 @@ class EventPageController extends PageController
 
         if ($registration) {
             if ($registration->Status != "Registered") {
-                return $this->redirect($this->Link("error") . "?error=Diese Registrierung wurde bereits bestätigt!");
+                return $this->redirect($this->Link("ticket/" . $registration->Hash));
             }
+
+            if ($registration->SecurityID) {
+                $securityid = $_GET["securityid"] ?? null;
+                if ($securityid !== $registration->SecurityID) {
+                    return $this->redirect($this->Link("error") . "?error=Sicherheitscode ist ungültig");
+                }
+            }
+
             $registration->Status = "Confirmed";
             $registration->write();
             return array(
@@ -332,15 +364,42 @@ class EventPageController extends PageController
         if ($hash != "") {
             $registration = Registration::get()->filter(array("Hash" => $hash))->First();
             if ($registration) {
-
-                //$qrcode = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=http%3A%2F%2Fwww.google.com%2F&choe=UTF-8";
-
                 return array(
                     "Registration" => $registration,
+                    "TicketDataJSON" => json_encode(
+                        $this->getTicketData($registration),
+                        JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                    ),
                 );
             }
         }
         return $this->redirect($this->Link("eventnotfound"));
+    }
+
+    public function ticketdata(HTTPRequest $request)
+    {
+        $hash = $request->param("ID");
+        $registration = $hash != "" ? Registration::get()->filter(array("Hash" => $hash))->First() : null;
+
+        $this->response->addHeader('Content-Type', 'application/json');
+        return json_encode($registration ? $this->getTicketData($registration) : array("Status" => null));
+    }
+
+    private function getTicketData(Registration $registration)
+    {
+        return array(
+            "Status" => $registration->Status,
+            "Title" => $registration->Title,
+            "GroupSize" => $registration->GroupSize,
+            "CouponType" => $registration->UsedCoupon()->exists() ? $registration->UsedCoupon()->Type : null,
+            "EventTitle" => $registration->Event()->Title,
+            "EventDateFormatted" => $registration->Event()->DateFormatted,
+            "EventPlace" => $registration->Event()->Place,
+            "SlotTimeFormatted" => $registration->TimeSlot()->SlotTimeFormatted,
+            "SlotTimeEndFormatted" => $registration->TimeSlot()->SlotTimeEndFormatted,
+            "QRCode" => $registration->getQRCode(),
+            "FeedbackPageLink" => $this->getFeedbackPageLink(),
+        );
     }
 
     public function validateticket(HTTPRequest $request)
@@ -381,6 +440,6 @@ class EventPageController extends PageController
     public function getFeedbackPageLink()
     {
         $feedbackPage = FeedbackPage::get()->first();
-        return $feedbackPage->Link();
+        return $feedbackPage ? $feedbackPage->Link() : null;
     }
 }

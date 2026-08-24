@@ -39,25 +39,55 @@ body.ticket{
     align-items: center;
     max-width: none;
     height: 100vh;
+    position: relative;
+    overflow: hidden;
+
+    &::before{
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("../../images/ticket_background.jpg");
+        background-size: cover;
+        background-position: center;
+        filter: blur(12px) brightness(0.35);
+        transform: scale(1.1); // hides the blurred, softened edges
+        z-index: 0;
+    }
+
+    // Establishes the sizing/container context. cqw/cqh units can't resolve
+    // against the size of the element that declares container-type itself,
+    // so the actual card (.section_ticket) sits inside this frame instead.
+    .section_ticket_frame{
+        aspect-ratio: 53.98 / 85.6; // ID-1 Kartenformat (Plastikkarte), hochkant
+        width: min(90dvw, calc(90dvh * 53.98 / 85.6));
+        max-width: 90dvw;
+        max-height: 90dvh;
+        container-type: size;
+        position: relative;
+        z-index: 1;
+    }
 
     .section_ticket{
-        background-color: var(--ColorBackground);
-        padding: 20px;
-        width: 100%;
+        background-color: #151515b6;
+        padding: 3cqw;
         display: flex;
         flex-direction: column;
+        gap: 2cqh;
         justify-content: space-between;
-        width: calc(100% - 40px);
-        height: calc(100% - 80px);
-        border-radius: 45px;
+        border-radius: 5cqw;
         text-align: center;
-        max-width: var(--MaxWidthContent);
         overflow: hidden;
         position: relative;
+        width: 100%;
+        height: 100%;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
 
         .section_headline{
             display: flex;
-            max-height: 70px;
+            //set height to 2 parts of the container height
+            height: 8cqh;
+            aspect-ratio: 1/1;
             flex-grow: 0;
             margin-bottom: 10px;
 
@@ -103,16 +133,50 @@ body.ticket{
         }
 
         .section_data{
-            padding-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 1cqh;
+
+            h1 {
+                font-size: 6cqh;
+                line-height: 1;
+            }
+
+            h2 {
+                font-size: 4cqh;
+                line-height: 1;
+            }
+
+            h3 {
+                font-size: 3cqh;
+                line-height: 1;
+            }
+
+            h4 {
+                font-size: 2.5cqh;
+                line-height: 1;
+            }
+        }
+
+        .section_directdata {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 2cqw;
+
+            h2 {
+                font-size: 4cqh;
+                line-height: 1;
+            }
         }
 
         .section_scancode{
-            height: 50%;
+            width: 100%;
             aspect-ratio: 1/1;
             display: block;
-            margin: 10px 0px;
             position: relative;
-            transition: 0.3s ease-in-out;
+            border-radius: 3cqw;
+            overflow: hidden;
 
             &.highlighted{
                 z-index: 10;
@@ -138,6 +202,16 @@ body.ticket{
             z-index: 5;
             backdrop-filter: blur(5px);
             pointer-events: none;
+
+            &.status-fade-enter-active,
+            &.status-fade-leave-active{
+                transition: opacity 0.4s ease;
+            }
+
+            &.status-fade-enter-from,
+            &.status-fade-leave-to{
+                opacity: 0;
+            }
 
             .section_status{
                 position: absolute;
@@ -184,10 +258,10 @@ body.ticket{
 
         .section_gear{
             position: absolute;
-            bottom: -50px;
-            right: -50px;
-            width: 100px;
-            height: 100px;
+            bottom: -6cqw;
+            right: -6cqw;
+            width: 14cqw;
+            aspect-ratio: 1;
             z-index: 2;
 
             animation: rotate 10s infinite linear;
@@ -201,10 +275,10 @@ body.ticket{
 
         .section_gear2 {
             position: absolute;
-            bottom: -50px;
-            left: -50px;
-            width: 100px;
-            height: 100px;
+            bottom: -6cqw;
+            left: -6cqw;
+            width: 14cqw;
+            aspect-ratio: 1;
             z-index: 2;
 
             animation: rotate 10s infinite linear;

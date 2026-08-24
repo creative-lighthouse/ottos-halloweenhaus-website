@@ -51,6 +51,7 @@ class Registration extends DataObject
         "Status" => "Varchar(255)",
         "Type" => "Varchar(255)",
         "ZIP" => "Varchar(5)",
+        "SecurityID" => "Varchar(3)",
     ];
 
     private static $has_one = [
@@ -128,6 +129,10 @@ class Registration extends DataObject
         if (!$this->Hash) {
             $this->Hash = substr(md5(string: $now . $this->Title . $this->Email), 0, 8);
         }
+
+        if (!$this->SecurityID) {
+            $this->SecurityID = str_pad((string) random_int(0, 999), 3, "0", STR_PAD_LEFT);
+        }
     }
 
     function onAfterWrite()
@@ -147,7 +152,7 @@ class Registration extends DataObject
         if ($this->Email != "test@test.de") {
 
             $eventpage = EventPage::get()->first();
-            $confirmLink = $eventpage->AbsoluteLink("registrationconfirm?event=" . $this->EventID . "&hash=" . $this->Hash);
+            $confirmLink = $eventpage->AbsoluteLink("registrationconfirm?event=" . $this->EventID . "&hash=" . $this->Hash . "&securityid=" . $this->SecurityID);
 
             // Variablen für Platzhalter
             $vars = [
@@ -168,8 +173,8 @@ class Registration extends DataObject
 
             //Send email to client
             $emailConfirmation = EmailNotification::create();
-            $subject = SiteConfig::current_site_config()->AckMessageSubject;
-            $content = SiteConfig::current_site_config()->AckMessageContent;
+            $subject = (string) SiteConfig::current_site_config()->AckMessageSubject;
+            $content = (string) SiteConfig::current_site_config()->AckMessageContent;
             foreach ($vars as $key => $value) {
                 $subject = str_replace($key, $value, $subject);
                 $content = str_replace($key, $value, $content);
@@ -184,8 +189,8 @@ class Registration extends DataObject
 
             //Send email to admin
             $emailNotification = EmailNotification::create();
-            $adminSubject = SiteConfig::current_site_config()->NewRegisterMessageSubject;
-            $adminContent = SiteConfig::current_site_config()->NewRegisterMessageContent;
+            $adminSubject = (string) SiteConfig::current_site_config()->NewRegisterMessageSubject;
+            $adminContent = (string) SiteConfig::current_site_config()->NewRegisterMessageContent;
             foreach ($vars as $key => $value) {
                 $adminSubject = str_replace($key, $value, $adminSubject);
                 $adminContent = str_replace($key, $value, $adminContent);
@@ -227,8 +232,8 @@ class Registration extends DataObject
 
             //Send email to client
             $emailConfirmation = EmailNotification::create();
-            $subject = SiteConfig::current_site_config()->TicketMessageSubject;
-            $content = SiteConfig::current_site_config()->TicketMessageContent;
+            $subject = (string) SiteConfig::current_site_config()->TicketMessageSubject;
+            $content = (string) SiteConfig::current_site_config()->TicketMessageContent;
             foreach ($vars as $key => $value) {
                 $subject = str_replace($key, $value, $subject);
                 $content = str_replace($key, $value, $content);
@@ -274,18 +279,18 @@ class Registration extends DataObject
             $validateLink = "/404";
         }
 
-        $qrCode = Builder::create()
-            ->writer(new PngWriter())
-            ->writerOptions([])
-            ->data($validateLink)
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(ErrorCorrectionLevel::High)
-            ->size(300)
-            ->margin(10)
-            ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
-            ->validateResult(false)
-            ->build();
-        header('Content-Type: ' . $qrCode->getMimeType());
+        $builder = new Builder(
+            writer: new PngWriter(),
+            writerOptions: [],
+            validateResult: false,
+            data: $validateLink,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 300,
+            margin: 10,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+        );
+        $qrCode = $builder->build();
         return $qrCode->getDataUri();
     }
 

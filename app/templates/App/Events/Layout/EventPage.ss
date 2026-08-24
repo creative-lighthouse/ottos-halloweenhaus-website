@@ -125,7 +125,7 @@
                 </div>
             </div>
         <% else %>
-            <p>Es sind keine Veranstaltungen verfügbar.</p>
+            <p>Aktuell sind keine Veranstaltungen verfügbar. Schau später wieder vorbei!</p>
         <% end_if %>
     </div>
 </div>
