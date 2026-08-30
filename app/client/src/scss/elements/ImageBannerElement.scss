@@ -52,13 +52,13 @@ section.section--ImageBannerElement {
     }
 
     &.overlay--brushstroke{
-        mask-image: url("../../../images/brushstroke_mask.svg");
+        mask-image: url("../../images/brushstroke_mask.svg");
         mask-size: 100% 100%;
         mask-repeat: no-repeat;
         mask-mode: luminance;
 
         @include media(max-medium) {
-            mask-image: url("../../../images/brushstroke_mask_mobile.svg");
+            mask-image: url("../../images/brushstroke_mask_mobile.svg");
         }
         .section_description{
             display: none;

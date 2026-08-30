@@ -51,7 +51,7 @@ class Registration extends DataObject
         "Status" => "Varchar(255)",
         "Type" => "Varchar(255)",
         "ZIP" => "Varchar(5)",
-        "SecurityID" => "Varchar(3)",
+        "ConfirmSecurityID" => "Varchar(3)",
     ];
 
     private static $has_one = [
@@ -108,6 +108,7 @@ class Registration extends DataObject
             )
         );
         $fields->removeByName("Type");
+        $fields->removeByName("ConfirmSecurityID");
 
         return $fields;
     }
@@ -130,8 +131,8 @@ class Registration extends DataObject
             $this->Hash = substr(md5(string: $now . $this->Title . $this->Email), 0, 8);
         }
 
-        if (!$this->SecurityID) {
-            $this->SecurityID = str_pad((string) random_int(0, 999), 3, "0", STR_PAD_LEFT);
+        if (!$this->ConfirmSecurityID) {
+            $this->ConfirmSecurityID = str_pad((string) random_int(0, 999), 3, "0", STR_PAD_LEFT);
         }
     }
 
@@ -152,7 +153,7 @@ class Registration extends DataObject
         if ($this->Email != "test@test.de") {
 
             $eventpage = EventPage::get()->first();
-            $confirmLink = $eventpage->AbsoluteLink("registrationconfirm?event=" . $this->EventID . "&hash=" . $this->Hash . "&securityid=" . $this->SecurityID);
+            $confirmLink = $eventpage->AbsoluteLink("registrationconfirm?event=" . $this->EventID . "&hash=" . $this->Hash . "&securityid=" . $this->ConfirmSecurityID);
 
             // Variablen für Platzhalter
             $vars = [

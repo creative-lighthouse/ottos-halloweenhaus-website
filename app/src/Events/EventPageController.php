@@ -306,9 +306,9 @@ class EventPageController extends PageController
                 return $this->redirect($this->Link("ticket/" . $registration->Hash));
             }
 
-            if ($registration->SecurityID) {
+            if ($registration->ConfirmSecurityID) {
                 $securityid = $_GET["securityid"] ?? null;
-                if ($securityid !== $registration->SecurityID) {
+                if ($securityid !== $registration->ConfirmSecurityID) {
                     return $this->redirect($this->Link("error") . "?error=Sicherheitscode ist ungültig");
                 }
             }
