@@ -6,6 +6,7 @@
 
     h1{
         text-align: center;
+        margin: 140px 0 20px 0;
     }
 
     h2{
@@ -254,9 +255,9 @@
 
     .section_content{
         .events_navigator{
-            background-color: white;
-            border-radius: 20px;
-            color: black;
+            background-color: var(--ColorGray);
+            border-radius: 10px;
+            color: var(--ColorWhite);
             overflow: hidden;
             padding: 10px;
 
@@ -404,7 +405,7 @@
                             text-align: center;
                             font-weight: 700;
                             padding: 10px 20px 0 20px;
-                            color: var(--ColorPrimary);
+                            color: var(--ColorWhite);
                         }
 
                         .date_card_month{
@@ -413,7 +414,7 @@
                             width: 100%;
                             text-align: center;
                             padding: 5px 15px 10px 15px;
-                            color: var(--ColorPrimary);
+                            color: var(--ColorWhite);
                         }
 
                         &.hidden{
@@ -482,6 +483,7 @@
 
                             .event_card_title{
                                 margin: 0;
+                                color: var(--ColorWhite);
                             }
 
                             .event_card_duration{
@@ -524,11 +526,16 @@
                         cursor: pointer;
                         border-radius: 10px;
                         padding: 10px 15px;
-                        color: var(--ColorPrimary);
+                        color: var(--ColorWhite);
                         display: flex;
                         flex-direction: column;
                         justify-content: center;
                         align-items: center;
+                        transition: background 0.3s ease-in-out;
+
+                        @media (prefers-reduced-motion: reduce) {
+                            transition: none;
+                        }
 
                         .timeslot_card_time{
                             font-size: 18px;
@@ -574,7 +581,7 @@
                         cursor: pointer;
                         border-radius: 10px;
                         padding: 10px 15px;
-                        color: var(--ColorPrimary);
+                        color: var(--ColorWhite);
                         display: flex;
                         flex-direction: column;
                         justify-content: center;
@@ -595,19 +602,31 @@
 
                 &.form{
                     padding: 20px;
-                    background-color: rgb(216, 216, 216);
+                    background-color: rgb(43, 43, 43);
                     border-radius: 10px;
                     text-align: center;
 
                     a{
-                        color: var(--ColorPrimary);
-                        text-decoration: none;
-                        font-weight: 700;
+                        color: var(--ColorPrimaryLight);
+                        //text-decoration: none;
+                        //font-weight: 700;
                     }
 
                     .btn-toolbar{
                         display: flex;
                         justify-content: center;
+                    }
+
+                    .field {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+
+                    label {
+                        max-width: unset;
                     }
 
                     input[type="submit"]{

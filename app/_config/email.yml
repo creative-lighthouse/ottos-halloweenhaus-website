@@ -1,26 +1,24 @@
-#---
-#Name: myemailconfig
-#After:
-#  - '#emailconfig'
-#---
-#SilverStripe\Core\Injector\Injector:
-#  Swift_Transport:
-#    class: Swift_SmtpTransport
-#    properties:
-#      Host: mail.your-server.de
-#      Port: 587
-#      Encryption: tls
-#  calls:
-#    Username: [ setUsername, ['`APP_SMTP_USERNAME`'] ]
-#    Password: [ setPassword, ['`APP_SMTP_PASSWORD`'] ]
-#    AuthMode: [ setAuthMode, ['login'] ]
-
-# app/_config/mailer-project.yml
 ---
-Name: mailer-project
-After: 'mailer'
+Name: app-email
+After:
+  - '#mailer'
 ---
-SilverStripe\Core\Injector\Injector:
-  Symfony\Component\Mailer\Transport\TransportInterface:
-    constructor:
-      dsn: '<my-dsn>'
+# Mail is configured entirely through environment variables:
+#
+#   MAILER_DSN      transport, read natively by
+#                   SilverStripe\Control\Email\TransportFactory
+#                     local / DDEV  smtp://localhost:1025            -> Mailpit
+#                     live          smtp://USER:PASS@mailserver:587  -> real server
+#
+#   SS_ADMIN_EMAIL  default "From" address for outgoing mail (see
+#                   App\Events\EmailNotification). Must be on a domain we
+#                   DKIM/SPF-sign or Gmail & co. reject the mail. When unset,
+#                   SilverStripe falls back to no-reply@<current-host>.
+#
+# The organiser address entered in the CMS (SiteConfig.EventAdminEmail) is
+# used as Reply-To only, never as the envelope sender.
+SilverStripe\Control\Email\Email:
+  # Nothing to configure here – kept as the single place documenting the
+  # mail setup. Do not re-add a hard-coded transport DSN: it breaks per-env
+  # configuration (local Mailpit vs. live SMTP).
+  admin_email: ''

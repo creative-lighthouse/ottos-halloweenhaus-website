@@ -19,6 +19,8 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\NumericField;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Forms\CheckboxField;
+use SilverStripe\Security\SecurityToken;
+use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 
 /**
@@ -53,6 +55,7 @@ class EventPageController extends PageController
         "ticketdata",
         "validateticket",
         "checkcoupon",
+        "eventscapacity",
         "error"
     ];
 
@@ -60,6 +63,7 @@ class EventPageController extends PageController
     {
         return array(
             "UsesCoupon" => $request->getVar("coupon"),
+            "PreselectEventID" => null,
         );
     }
 
@@ -74,10 +78,15 @@ class EventPageController extends PageController
 
     public function register(HTTPRequest $request)
     {
-        $id = $this->getRequest()->param("ID");
-        $article = Event::get()->byId($id);
+        $id = (int) $this->getRequest()->param("ID");
+        $event = Event::get()->byId($id);
+
+        // The dedicated register template is gone: the Vue navigator now handles the
+        // whole flow. We just hand it the pre-selected event so it can jump straight
+        // to the timeslot step.
         return array(
-            "Event" => $article,
+            "UsesCoupon" => $request->getVar("coupon"),
+            "PreselectEventID" => $event ? $event->ID : null,
         );
     }
 
@@ -124,7 +133,6 @@ class EventPageController extends PageController
             HiddenField::create("Couponcode", "Couponcode"),
             TextField::create("Title", "Vor- & Nachname"),
             EmailField::create("Email", "E-Mail-Adresse"),
-            LiteralField::create("MailProblemsInfo", "Bitte keine GMX oder Web.de Adressen verwenden. Diese empfangen unsere Mails aktuell nicht."),
             NumericField::create("PLZ", "Postleitzahl (optional)")->setHTML5(true),
             LiteralField::create("DataPrivacyinfo", "Ich habe die <a href='impressum-und-datenschutz'>Datenschutzerklärung</a> gelesen und willige ein, dass meine Daten im Sinne der DSGVO verwendet werden."),
             CheckboxField::create("DataPrivacy", "Datenschutzerklärung akzeptieren"),
@@ -154,8 +162,8 @@ class EventPageController extends PageController
         $event = Event::get()->byId($data["EventID"]);
         $timeslot = EventTimeSlot::get()->byId($data["TimeSlotID"]);
         $groupsize = $data["GroupSize"];
-        $zip = $data["PLZ"];
-        $couponcode = $data["Couponcode"];
+        $zip = $data["PLZ"] ?? null;
+        $couponcode = $data["Couponcode"] ?? null;
 
         $result = null;
 
@@ -341,6 +349,140 @@ class EventPageController extends PageController
     {
         $events = $this->getEvents();
         return GroupedList::create($events);
+    }
+
+    /**
+     * JSON payload the Vue events navigator boots from. Rendered into the page as
+     * <script type="application/json" id="events-initial-data">.
+     */
+    public function getEventsDataJSON()
+    {
+        return json_encode(
+            $this->buildEventsData(),
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        );
+    }
+
+    /**
+     * Lightweight capacity-only feed the Vue navigator polls so timeslots that
+     * fill up while someone is booking update without a page reload.
+     */
+    public function eventscapacity(HTTPRequest $request)
+    {
+        $this->response->addHeader('Content-Type', 'application/json');
+        return json_encode($this->buildEventsData(true));
+    }
+
+    /**
+     * Single source of truth for both the initial navigator payload and the
+     * capacity poll. With $capacityOnly the return is trimmed to per-timeslot
+     * availability keyed by timeslot ID.
+     */
+    private function buildEventsData(bool $capacityOnly = false): array
+    {
+        $mapSlot = function (EventTimeSlot $slot, bool $isFull, bool $coupon): array {
+            return [
+                "id" => (int) $slot->ID,
+                "time" => $slot->getSlotTimeFormatted(),
+                "endTime" => $slot->getSlotTimeEndFormatted(),
+                "freeCount" => $coupon
+                    ? (int) $slot->getFreeCouponSlotCount()
+                    : (int) $slot->getFreeSlotCount(),
+                "totalCount" => $coupon ? (int) $slot->MaxVIPs : (int) $slot->MaxAttendees,
+                "full" => $isFull,
+                "capacityLabel" => $isFull
+                    ? "Ausgebucht"
+                    : ($coupon ? $slot->CouponAttendeesFormatted() : $slot->AttendeesFormatted()),
+            ];
+        };
+
+        $dates = [];
+        $timeslotCapacity = [];
+        $couponTimeslotCapacity = [];
+
+        foreach ($this->getEvents() as $event) {
+            $freeSlots = $event->FreeTimeSlotsInFuture();
+            $fullSlots = $event->FullTimeSlots();
+            $freeCouponSlots = $event->FreeCouponTimeSlotsInFuture();
+            $fullCouponSlots = $event->FullCouponTimeSlots();
+
+            $timeslots = [];
+            foreach ($freeSlots as $slot) {
+                $timeslots[] = $mapSlot($slot, false, false);
+            }
+            foreach ($fullSlots as $slot) {
+                $timeslots[] = $mapSlot($slot, true, false);
+            }
+
+            $couponTimeslots = [];
+            foreach ($freeCouponSlots as $slot) {
+                $couponTimeslots[] = $mapSlot($slot, false, true);
+            }
+            foreach ($fullCouponSlots as $slot) {
+                $couponTimeslots[] = $mapSlot($slot, true, true);
+            }
+
+            if ($capacityOnly) {
+                foreach ($timeslots as $slot) {
+                    $timeslotCapacity[$slot["id"]] = [
+                        "freeCount" => $slot["freeCount"],
+                        "totalCount" => $slot["totalCount"],
+                        "full" => $slot["full"],
+                        "capacityLabel" => $slot["capacityLabel"],
+                    ];
+                }
+                foreach ($couponTimeslots as $slot) {
+                    $couponTimeslotCapacity[$slot["id"]] = [
+                        "freeCount" => $slot["freeCount"],
+                        "totalCount" => $slot["totalCount"],
+                        "full" => $slot["full"],
+                        "capacityLabel" => $slot["capacityLabel"],
+                    ];
+                }
+                continue;
+            }
+
+            $dateKey = $event->EventDate;
+            if (!isset($dates[$dateKey])) {
+                $dates[$dateKey] = [
+                    "date" => $dateKey,
+                    "weekday" => $event->getDateWeekday(),
+                    "day" => $event->getDateDay(),
+                    "month" => $event->getDateMonthTitle(),
+                    "events" => [],
+                ];
+            }
+
+            $dates[$dateKey]["events"][] = [
+                "id" => (int) $event->ID,
+                "title" => $event->Title,
+                "image" => $event->Image()->exists()
+                    ? $event->Image()->FocusFill(500, 200)->URL
+                    : null,
+                "slotDuration" => (int) $event->SlotDuration,
+                "date" => $dateKey,
+                "timeslots" => $timeslots,
+                "couponTimeslots" => $couponTimeslots,
+                "noFreeTimeslots" => $freeSlots->count() === 0,
+                "noFreeCouponTimeslots" => $freeCouponSlots->count() === 0,
+            ];
+        }
+
+        if ($capacityOnly) {
+            return [
+                "timeslots" => (object) $timeslotCapacity,
+                "couponTimeslots" => (object) $couponTimeslotCapacity,
+            ];
+        }
+
+        return [
+            "usesCoupon" => (bool) $this->getRequest()->getVar("coupon"),
+            "maxGroupSize" => (int) SiteConfig::current_site_config()->MaxGroupSize,
+            "registrationFormUrl" => $this->Link("RegistrationForm"),
+            "securityID" => SecurityToken::inst()->getValue(),
+            "eventPageLink" => $this->Link(),
+            "dates" => array_values($dates),
+        ];
     }
 
     public function unsubscribe(HTTPRequest $request)

@@ -4,6 +4,7 @@ namespace App\Events;
 
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Core\Environment;
 use SilverStripe\Control\Email\Email;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\SiteConfig\SiteConfig;
@@ -88,10 +89,29 @@ class EmailNotification extends DataObject
         parent::onAfterWrite();
 
         $registration = $this->Registration();
-        $this->Email = strtolower($this->Email);
+        $this->Email = strtolower((string) $this->Email);
 
-        if ($this->Email != "test@test.de") {
-            $email = Email::create(SiteConfig::current_site_config()->EventAdminEmail, $this->Email, 'Deine Anmeldung');
+        // Nothing to send without a valid recipient (e.g. the admin notification
+        // when SiteConfig.EventAdminEmail is not configured). Bailing out keeps
+        // the surrounding registration transaction from blowing up.
+        if ($this->Email !== "" && $this->Email !== "test@test.de" && filter_var($this->Email, FILTER_VALIDATE_EMAIL)) {
+            $adminEmail = SiteConfig::current_site_config()->EventAdminEmail;
+
+            $email = Email::create();
+            $email->setTo($this->Email);
+
+            // The "From" address must stay on a domain we DKIM/SPF-sign
+            // (SS_ADMIN_EMAIL), otherwise Gmail & co. reject the mail. The
+            // organiser address from the CMS is only used as Reply-To so
+            // attendee replies still reach the team.
+            $fromAddress = Environment::getEnv('SS_ADMIN_EMAIL') ?: Email::config()->get('admin_email');
+            if ($fromAddress) {
+                $email->setFrom($fromAddress);
+            }
+            if ($adminEmail) {
+                $email->setReplyTo($adminEmail);
+            }
+
             $email->html($this->Text);
             $email->text($this->Text);
             //if ($this->Attachment()) {
