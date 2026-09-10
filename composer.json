@@ -28,7 +28,8 @@
         "stevenpaw/stevens-silverstripe-icons": "dev-main",
         "atwx/silverstripe-element-overview": "^1.0",
         "stevenpaw/silverstripe-sociallink": "dev-main",
-        "stevenpaw/silverstripe-cms-backend-theme": "^1.1"
+        "stevenpaw/silverstripe-cms-backend-theme": "^1.1",
+        "firebase/php-jwt": "^7.1"
     },
     "require-dev": {
         "wernerkrauss/silverstripe-rector": "^1",

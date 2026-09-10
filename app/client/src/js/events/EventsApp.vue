@@ -324,30 +324,3 @@ onBeforeUnmount(() => {
         </Transition>
     </div>
 </template>
-
-<style scoped>
-.step-enter-active,
-.step-leave-active {
-    transition: opacity 0.2s ease-in-out, max-height 0.2s ease-in-out;
-    overflow: hidden;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .step-enter-active,
-    .step-leave-active {
-        transition: none;
-    }
-}
-
-.step-enter-from,
-.step-leave-to {
-    opacity: 0;
-    max-height: 0;
-}
-
-.step-enter-to,
-.step-leave-from {
-    opacity: 1;
-    max-height: 1200px;
-}
-</style>

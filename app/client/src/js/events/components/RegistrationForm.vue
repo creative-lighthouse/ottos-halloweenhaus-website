@@ -117,52 +117,9 @@ function onSubmit(event) {
         </fieldset>
 
         <div class="btn-toolbar">
-            <button type="submit" name="action_completeregistration" class="registration_submit">
+            <button type="submit" name="action_completeregistration" class="link--button button--primary">
                 Absenden
             </button>
         </div>
     </form>
 </template>
-
-<style scoped>
-.form_error {
-    color: #ff6b6b;
-    font-size: 13px;
-    margin: 4px 0 0;
-}
-
-.form_hint {
-    color: #c9c9c9;
-    font-size: 12px;
-    margin: 4px 0 0;
-}
-
-.form_hint--warn {
-    color: #ffcf5c;
-}
-
-.field--checkbox label {
-    display: flex;
-    gap: 8px;
-    align-items: flex-start;
-    justify-content: center;
-    text-align: left;
-    max-width: 480px;
-    margin: 0 auto;
-}
-
-.registration_submit {
-    background-color: var(--ColorPrimary);
-    color: var(--ColorWhite);
-    border: none;
-    border-radius: 10px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-weight: 700;
-    transition: background-color 0.1s ease-in-out;
-}
-
-.registration_submit:hover {
-    background-color: var(--ColorPrimaryDark);
-}
-</style>

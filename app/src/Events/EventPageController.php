@@ -541,6 +541,7 @@ class EventPageController extends PageController
             "SlotTimeEndFormatted" => $registration->TimeSlot()->SlotTimeEndFormatted,
             "QRCode" => $registration->getQRCode(),
             "FeedbackPageLink" => $this->getFeedbackPageLink(),
+            "GoogleWalletLink" => $registration->getGoogleWalletLink(),
         );
     }
 

@@ -205,6 +205,7 @@
 
                     &:hover{
                         background-color: var(--ColorPrimaryDark);
+                        color: var(--ColorWhite);
                     }
                 }
 
@@ -714,5 +715,60 @@
     }
     100% {
         transform: translateY(0) scaleY(1);
+    }
+}
+
+// Styles for the Vue events wizard (EventsApp.vue / RegistrationForm.vue).
+// These live here instead of in <style scoped> blocks because Vite emits a
+// component's scoped CSS into a chunk tied to the main.js entry, which is
+// never linked in the page <head> (only main.scss's own CSS output is) -
+// scoped styles would silently never load.
+.events-navigator-app{
+    .form_error{
+        color: #ff6b6b;
+        font-size: 13px;
+        margin: 4px 0 0;
+    }
+
+    .form_hint{
+        color: #c9c9c9;
+        font-size: 12px;
+        margin: 4px 0 0;
+    }
+
+    .form_hint--warn{
+        color: #ffcf5c;
+    }
+
+    .field--checkbox label{
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        justify-content: center;
+        text-align: left;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .step-enter-active,
+    .step-leave-active{
+        transition: opacity 0.2s ease-in-out, max-height 0.2s ease-in-out;
+        overflow: hidden;
+
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+        }
+    }
+
+    .step-enter-from,
+    .step-leave-to{
+        opacity: 0;
+        max-height: 0;
+    }
+
+    .step-enter-to,
+    .step-leave-from{
+        opacity: 1;
+        max-height: 1200px;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use SilverStripe\Assets\File;
+use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Core\Environment;
 use SilverStripe\Control\Email\Email;
@@ -104,10 +105,13 @@ class EmailNotification extends DataObject
             // (SS_ADMIN_EMAIL), otherwise Gmail & co. reject the mail. The
             // organiser address from the CMS is only used as Reply-To so
             // attendee replies still reach the team.
-            $fromAddress = Environment::getEnv('SS_ADMIN_EMAIL') ?: Email::config()->get('admin_email');
-            if ($fromAddress) {
-                $email->setFrom($fromAddress);
-            }
+            // Always set From explicitly (with a display name) rather than leaving
+            // it to Silverstripe's own no-reply@<host> fallback, which carries no
+            // name and is what GMX/Web.de tend to flag as spam.
+            $fromAddress = Environment::getEnv('SS_ADMIN_EMAIL')
+                ?: Email::config()->get('admin_email')
+                ?: 'no-reply@' . parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
+            $email->setFrom($fromAddress, "Ottos Halloweenhaus");
             if ($adminEmail) {
                 $email->setReplyTo($adminEmail);
             }

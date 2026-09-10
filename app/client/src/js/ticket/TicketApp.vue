@@ -12,6 +12,7 @@ const props = defineProps({
 const ticket = reactive({ ...props.initial });
 const scanHighlighted = ref(false);
 const gearImage = "./_resources/app/client/images/Zahnrad.png";
+const googleWalletButtonImage = "./_resources/app/client/images/google_wallet_button_de.svg";
 
 let pollTimer = null;
 let highlightTimer = null;
@@ -112,6 +113,13 @@ onBeforeUnmount(() => {
                         />
                     </g>
                 </svg>
+                <a
+                    v-if="ticket.GoogleWalletLink"
+                    :href="ticket.GoogleWalletLink"
+                    class="section_walletbutton"
+                >
+                    <img :src="googleWalletButtonImage" alt="Zu Google Wallet hinzufügen">
+                </a>
             </div>
             <div class="section_gear">
                 <img :src="gearImage" alt="Gear">

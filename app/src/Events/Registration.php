@@ -3,10 +3,13 @@
 namespace App\Events;
 
 use DateTime;
+use Firebase\JWT\JWT;
 use App\Events\Event;
 use App\Events\EventAdmin;
 use App\Events\EventTimeSlot;
+use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Core\Environment;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Encoding\Encoding;
@@ -157,19 +160,20 @@ class Registration extends DataObject
 
             // Variablen für Platzhalter
             $vars = [
-                '{Registration.Title}' => $this->Title,
-                '{Registration.Name}' => $this->Title,
-                '{Registration.Email}' => $this->Email,
-                '{Registration.GroupSize}' => $this->GroupSize,
-                '{Registration.UnsubscribeLink}' => $this->getUnsubscribeLink(),
-                '{Event.Title}' => $this->Event ? $this->Event->Title : '',
-                '{Event.DateFormatted}' => $this->Event ? $this->Event->DateFormatted : '',
-                '{TimeSlot.SlotTime}' => $this->TimeSlot ? $this->TimeSlot->SlotTime : '',
-                '{TimeSlot.SlotTimeFormatted}' => $this->TimeSlot->SlotTimeFormatted,
-                '{TimeSlot.SlotTimeEndFormatted}' => $this->TimeSlot->SlotTimeEndFormatted,
-                '{TimeSlot.FreeSlotCount}' => $this->TimeSlot->getFreeSlotCount(),
-                '{TimeSlot.MaxAttendees}' => $this->TimeSlot->MaxAttendees,
-                '{ConfirmLink}' => $confirmLink
+                '{Registration.Title}' => (string) $this->Title,
+                '{Registration.Name}' => (string) $this->Title,
+                '{Registration.Email}' => (string) $this->Email,
+                '{Registration.GroupSize}' => (string) $this->GroupSize,
+                '{Registration.UnsubscribeLink}' => (string) $this->getUnsubscribeLink(),
+                '{Event.Title}' => (string) ($this->Event ? $this->Event->Title : ''),
+                '{Event.DateFormatted}' => (string) ($this->Event ? $this->Event->DateFormatted : ''),
+                '{Event.Place}' => (string) ($this->Event ? $this->Event->Place : ''),
+                '{TimeSlot.SlotTime}' => (string) ($this->TimeSlot ? $this->TimeSlot->SlotTime : ''),
+                '{TimeSlot.SlotTimeFormatted}' => (string) $this->TimeSlot->SlotTimeFormatted,
+                '{TimeSlot.SlotTimeEndFormatted}' => (string) $this->TimeSlot->SlotTimeEndFormatted,
+                '{TimeSlot.FreeSlotCount}' => (string) $this->TimeSlot->getFreeSlotCount(),
+                '{TimeSlot.MaxAttendees}' => (string) $this->TimeSlot->MaxAttendees,
+                '{ConfirmLink}' => (string) $confirmLink
             ];
 
             //Send email to client
@@ -218,17 +222,18 @@ class Registration extends DataObject
 
             // Variablen für Platzhalter
             $vars = [
-                '{Registration.Title}' => $this->Title,
-                '{Registration.Name}' => $this->Title,
-                '{Registration.Email}' => $this->Email,
-                '{Registration.GroupSize}' => $this->GroupSize,
-                '{Registration.UnsubscribeLink}' => $this->getUnsubscribeLink(),
-                '{Event.Title}' => $this->Event->Title,
-                '{Event.DateFormatted}' => $this->Event->DateFormatted,
-                '{TimeSlot.SlotTime}' => $this->TimeSlot->SlotTime,
-                '{TimeSlot.SlotTimeFormatted}' => $this->TimeSlot->SlotTimeFormatted,
-                '{TimeSlot.SlotTimeEndFormatted}' => $this->TimeSlot->SlotTimeEndFormatted,
-                '{TicketLink}' => $ticketLink
+                '{Registration.Title}' => (string) $this->Title,
+                '{Registration.Name}' => (string) $this->Title,
+                '{Registration.Email}' => (string) $this->Email,
+                '{Registration.GroupSize}' => (string) $this->GroupSize,
+                '{Registration.UnsubscribeLink}' => (string) $this->getUnsubscribeLink(),
+                '{Event.Title}' => (string) $this->Event->Title,
+                '{Event.DateFormatted}' => (string) $this->Event->DateFormatted,
+                '{Event.Place}' => (string) $this->Event->Place,
+                '{TimeSlot.SlotTime}' => (string) $this->TimeSlot->SlotTime,
+                '{TimeSlot.SlotTimeFormatted}' => (string) $this->TimeSlot->SlotTimeFormatted,
+                '{TimeSlot.SlotTimeEndFormatted}' => (string) $this->TimeSlot->SlotTimeEndFormatted,
+                '{TicketLink}' => (string) $ticketLink
             ];
 
             //Send email to client
@@ -271,20 +276,22 @@ class Registration extends DataObject
         return "/404";
     }
 
-    public function getQRCode()
+    public function getValidateLink()
     {
         $adminPage = EventAdminPage::get()->first();
         if ($adminPage) {
-            $validateLink = $adminPage->AbsoluteLink("checkRegistration") . "/" . $this->Hash;
-        } else {
-            $validateLink = "/404";
+            return $adminPage->AbsoluteLink("checkRegistration") . "/" . $this->Hash;
         }
+        return "/404";
+    }
 
+    public function getQRCode()
+    {
         $builder = new Builder(
             writer: new PngWriter(),
             writerOptions: [],
             validateResult: false,
-            data: $validateLink,
+            data: $this->getValidateLink(),
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::High,
             size: 300,
@@ -293,6 +300,80 @@ class Registration extends DataObject
         );
         $qrCode = $builder->build();
         return $qrCode->getDataUri();
+    }
+
+    /**
+     * Builds a "Save to Google Wallet" link. The pass class + object are embedded
+     * directly in the signed JWT, so no prior REST API call is needed to create
+     * them - Google creates/updates both from the JWT payload on save.
+     */
+    public function getGoogleWalletLink()
+    {
+        $issuerId = Environment::getEnv('GOOGLE_WALLET_ISSUER_ID');
+        $keyPath = Environment::getEnv('GOOGLE_WALLET_SERVICE_ACCOUNT_KEY_PATH');
+        if (!$issuerId || !$keyPath) {
+            return null;
+        }
+
+        $absoluteKeyPath = Director::is_absolute($keyPath) ? $keyPath : Director::baseFolder() . '/' . $keyPath;
+        if (!file_exists($absoluteKeyPath)) {
+            return null;
+        }
+        $serviceAccount = json_decode(file_get_contents($absoluteKeyPath), true);
+
+        $classId = $issuerId . '.ottos_halloweenhaus_ticket';
+        $objectId = $issuerId . '.registration_' . $this->Hash;
+
+        $genericClass = [
+            "id" => $classId,
+        ];
+
+        $genericObject = [
+            "id" => $objectId,
+            "classId" => $classId,
+            "state" => $this->Status === "Cancelled" ? "INACTIVE" : "ACTIVE",
+            "logo" => [
+                "sourceUri" => ["uri" => "https://ottos-halloweenhaus.de/assets/hwhs_logo2026_profile_white.png"],
+            ],
+            "cardTitle" => ["defaultValue" => ["language" => "de", "value" => $this->Event ? $this->Event->Title : "Ottos Halloweenhaus"]],
+            "header" => ["defaultValue" => ["language" => "de", "value" => $this->Title]],
+            "subheader" => ["defaultValue" => ["language" => "de", "value" => $this->GroupSize . " Person(en)"]],
+            "hexBackgroundColor" => "#151515",
+            "textModulesData" => [
+                [
+                    "id" => "event_datetime",
+                    "header" => "Termin",
+                    "body" => trim(
+                        ($this->Event ? $this->Event->DateFormatted : "") . " · " .
+                        ($this->TimeSlot ? $this->TimeSlot->SlotTimeFormatted . " - " . $this->TimeSlot->SlotTimeEndFormatted . " Uhr" : "")
+                    ),
+                ],
+                [
+                    "id" => "event_place",
+                    "header" => "Ort",
+                    "body" => (string) ($this->Event ? $this->Event->Place : ""),
+                ],
+            ],
+            "barcode" => [
+                "type" => "QR_CODE",
+                "value" => $this->getValidateLink(),
+                "alternateText" => $this->Hash,
+            ],
+        ];
+
+        $payload = [
+            "iss" => $serviceAccount["client_email"],
+            "aud" => "google",
+            "typ" => "savetowallet",
+            "iat" => time(),
+            "payload" => [
+                "genericClasses" => [$genericClass],
+                "genericObjects" => [$genericObject],
+            ],
+        ];
+
+        $jwt = JWT::encode($payload, $serviceAccount["private_key"], "RS256");
+        return "https://pay.google.com/gp/v/save/" . $jwt;
     }
 
     public function getStatusText()

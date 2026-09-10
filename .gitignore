@@ -1,4 +1,5 @@
 /.env
+/app/_secrets/
 /vendor/
 /_resources/
 /public/_resources/
