@@ -11,6 +11,7 @@ const props = defineProps({
 
 const ticket = reactive({ ...props.initial });
 const scanHighlighted = ref(false);
+const showCheckInCode = ref(false);
 const gearImage = "./_resources/app/client/images/Zahnrad.png";
 const googleWalletButtonImage = "./_resources/app/client/images/google_wallet_button_de.svg";
 
@@ -25,6 +26,10 @@ async function fetchTicketData() {
     } catch (error) {
         console.error('Ticket status check failed', error);
     }
+}
+
+function toggleCheckInCode() {
+    showCheckInCode.value = !showCheckInCode.value;
 }
 
 function onScanClick() {
@@ -95,6 +100,7 @@ onBeforeUnmount(() => {
                 </div>
             </Transition>
             <div class="section_headline">
+                <div class="section_logo_row">
                 <svg
                     class="header_icon"
                     width="100%"
@@ -102,6 +108,7 @@ onBeforeUnmount(() => {
                     version="1.1"
                     xmlns="http://www.w3.org/2000/svg"
                     xmlns:svg="http://www.w3.org/2000/svg"
+                    @click="toggleCheckInCode"
                 >
                     <g>
                         <circle class="eyes" cx="22.5px" cy="17px" r="1.5px" fill="currentColor" />
@@ -113,6 +120,10 @@ onBeforeUnmount(() => {
                         />
                     </g>
                 </svg>
+                <Transition name="status-fade">
+                    <span v-if="showCheckInCode && ticket.CheckInCode" class="section_checkincode">{{ ticket.CheckInCode }}</span>
+                </Transition>
+                </div>
                 <a
                     v-if="ticket.GoogleWalletLink"
                     :href="ticket.GoogleWalletLink"

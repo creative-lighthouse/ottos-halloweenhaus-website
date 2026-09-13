@@ -92,6 +92,18 @@ body.ticket{
             flex-grow: 0;
             margin-bottom: 10px;
 
+            .section_logo_row{
+                display: flex;
+                align-items: center;
+                gap: 2cqw;
+            }
+
+            .section_checkincode{
+                font-weight: 600;
+                letter-spacing: 1px;
+                white-space: nowrap;
+            }
+
             svg {
                 //set height to 2 parts of the container height
                 height: 8cqh;
@@ -99,6 +111,7 @@ body.ticket{
                 flex-shrink: 0;
                 object-fit: contain;
                 color: var(--ColorWhite);
+                cursor: pointer;
                 animation: rainbow 75s infinite;
 
                 .eyes{
@@ -187,21 +200,23 @@ body.ticket{
 
             img{
                 width: auto;
-                max-width: 100%;
+                width: 100%;
                 height: 100%;
                 object-fit: contain;
                 position: relative;
                 z-index: 1;
+                display: block;
+                object-fit: cover;
             }
         }
 
         .section_status_wrap{
-            position: fixed;
-            bottom: 0;
-            left: 0;
+            // Absolute against .section_ticket (not fixed against the viewport) so
+            // it always covers exactly the card, regardless of vh/dvh mismatches
+            // between this and the outer viewport-centering container.
+            position: absolute;
+            inset: 0;
             background-color: rgba(0, 0, 0, 0.7);
-            width: 100vw;
-            height: 100vh;
             z-index: 5;
             backdrop-filter: blur(5px);
             pointer-events: none;

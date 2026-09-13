@@ -537,6 +537,7 @@ class EventPageController extends PageController
             "EventTitle" => $registration->Event()->Title,
             "EventDateFormatted" => $registration->Event()->DateFormatted,
             "EventPlace" => $registration->Event()->Place,
+            "CheckInCode" => $registration->CheckInCode,
             "SlotTimeFormatted" => $registration->TimeSlot()->SlotTimeFormatted,
             "SlotTimeEndFormatted" => $registration->TimeSlot()->SlotTimeEndFormatted,
             "QRCode" => $registration->getQRCode(),

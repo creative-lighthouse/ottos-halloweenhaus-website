@@ -59,6 +59,7 @@ class ApiPageController extends ContentController
         "statistics",
         "addPOSSale",
         "wikiindex",
+        "recentEntries",
     ];
 
     public function index(HTTPRequest $request)
@@ -69,10 +70,18 @@ class ApiPageController extends ContentController
 
     public function checkCode(HTTPRequest $request)
     {
-        $registration = Registration::get()->filter("Hash", $request->param("ID"))->first();
+        $code = $request->param("ID");
+
+        // Accepts either the hash scanned from a QR code, or the 8-character
+        // check-in code read off the ticket by hand when scanning isn't possible.
+        $registration = Registration::get()->filter("Hash", $code)->first();
+        if (!$registration) {
+            $registration = Registration::get()->filter("CheckInCode", strtoupper($code))->first();
+        }
 
         if ($registration) {
             $data['Valid'] = true;
+            $data['Hash'] = $registration->Hash;
             $data['Name'] = $registration->Title;
             $timeslotTime = $registration->TimeSlot()->SlotTime;
             $eventdate = $registration->Event()->EventDate;
@@ -116,7 +125,12 @@ class ApiPageController extends ContentController
 
     public function acceptTicket(HTTPRequest $request)
     {
-        $registration = Registration::get()->filter("Hash", $request->param("ID"))->first();
+        $code = $request->param("ID");
+
+        $registration = Registration::get()->filter("Hash", $code)->first();
+        if (!$registration) {
+            $registration = Registration::get()->filter("CheckInCode", strtoupper($code))->first();
+        }
 
         if ($registration) {
             $registration->Status = "CheckedIn";
@@ -152,6 +166,12 @@ class ApiPageController extends ContentController
                 "Hash" => $hash,
                 "EventID" => $event_id,
             ))->First();
+            if (!$registration) {
+                $registration = Registration::get()->filter(array(
+                    "CheckInCode" => strtoupper($hash),
+                    "EventID" => $event_id,
+                ))->First();
+            }
         }
 
         if ($registration) {
@@ -172,16 +192,67 @@ class ApiPageController extends ContentController
         $sq = $entereddata['sq'];
         $vq = $entereddata['vq'];
         $tt = $entereddata['tt'];
+        $type = $entereddata['type'] ?? null;
+        $vqHashes = $entereddata['vqHashes'] ?? [];
 
         $entryLog = EntryLog::create();
         $entryLog->SQ = $sq;
         $entryLog->VQ = $vq;
         $entryLog->EntryTime = date("Y-m-d H:i:s");
+        if (in_array($type, ["Magic", "Scary", "Empty"], true)) {
+            $entryLog->Type = $type;
+        }
         $entryLog->write();
+
+        if (is_array($vqHashes) && !empty($vqHashes)) {
+            $registrations = Registration::get()->filter("Hash", $vqHashes);
+            $entryLog->Registrations()->addMany($registrations);
+        }
 
         $data['Valid'] = true;
 
         $this->response->addHeader('Content-Type', 'application/json');
+        return json_encode($data);
+    }
+
+    /**
+     * Returns the 10 most recent show entries (EntryLog rows). Requires a
+     * valid API key, sent as the "X-Api-Key" request header.
+     */
+    public function recentEntries(HTTPRequest $request)
+    {
+        $this->response->addHeader('Content-Type', 'application/json');
+
+        if (!ApiKey::isValidToken($request->getHeader('X-Api-Key'))) {
+            $this->response->setStatusCode(401);
+            return json_encode(["error" => "Ungültiger oder fehlender API-Schlüssel."]);
+        }
+
+        $entries = EntryLog::get()->sort("EntryTime", "DESC")->limit(10);
+
+        $data = [];
+        foreach ($entries as $entry) {
+            $registrations = [];
+            foreach ($entry->Registrations() as $registration) {
+                $registrations[] = [
+                    "Hash" => $registration->Hash,
+                    "Title" => $registration->Title,
+                    "GroupSize" => $registration->GroupSize,
+                    "CouponType" => $registration->UsedCoupon()->exists() ? $registration->UsedCoupon()->Type : "Normal",
+                ];
+            }
+
+            $data[] = [
+                "EntryTime" => $entry->EntryTime,
+                "SQ" => $entry->SQ,
+                "VQ" => $entry->VQ,
+                "Sum" => $entry->getTotalGuests(),
+                "AdditionalInfo" => $entry->AdditionalInfo,
+                "Type" => $entry->Type,
+                "Registrations" => $registrations,
+            ];
+        }
+
         return json_encode($data);
     }
 
@@ -205,6 +276,12 @@ class ApiPageController extends ContentController
                 "Hash" => $hash,
                 "EventID" => $event_id,
             ))->First();
+            if (!$registration) {
+                $registration = Registration::get()->filter(array(
+                    "CheckInCode" => strtoupper($hash),
+                    "EventID" => $event_id,
+                ))->First();
+            }
 
             if ($registration) {
                 if ($currentUser) {

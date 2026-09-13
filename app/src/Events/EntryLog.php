@@ -22,6 +22,12 @@ class EntryLog extends DataObject
         "EntryTime" => "Datetime",
         "SQ" => "Int",
         "VQ" => "Int",
+        "AdditionalInfo" => "Text",
+        "Type" => "Enum('Magic,Scary,Empty','Magic')",
+    ];
+
+    private static $many_many = [
+        "Registrations" => Registration::class,
     ];
 
     private static $default_sort = "EntryTime DESC";
@@ -30,6 +36,8 @@ class EntryLog extends DataObject
         "EntryTime" => "Eintrittszeit",
         "VQ" => "Virtual Queue Gäste",
         "SQ" => "Standby Queue Gäste",
+        "AdditionalInfo" => "Zusätzliche Informationen",
+        "Type" => "Typ",
     ];
 
     private static $summary_fields = [
@@ -37,6 +45,8 @@ class EntryLog extends DataObject
         "VQ" => "Virtual Queue Gäste",
         "SQ" => "Standby Queue Gäste",
         "TotalGuests" => "Gesamtanzahl",
+        "AdditionalInfo" => "Zusätzliche Informationen",
+        "Type" => "Typ",
     ];
 
     private static $table_name = "EntryLog";

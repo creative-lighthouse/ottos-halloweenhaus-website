@@ -4,6 +4,7 @@ import "./eventsNavigator";
 import "./posSystem";
 import "./statisticsPage";
 import "./ticketPage";
+import "./eventAdminPage";
 import "./glossar.js";
 import { initYoutubeConsent } from "./youtubeConsent.js";
 import { initAudioPlayers, initYoutubeAudioPlayers } from "./audioPlayer.js";

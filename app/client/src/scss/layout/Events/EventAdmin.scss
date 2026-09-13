@@ -55,23 +55,32 @@
                 left: 0;
                 right: 0;
                 display: flex;
-                height: 70px;
+                height: 10cqw;
                 background-color: var(--ColorBackground);
-                justify-content: center;
+                justify-content: stretch;
                 align-items: center;
+                padding: 5px;
+                box-shadow: 0px -5px 15px -5px var(--ColorBlack);
 
                 .clock{
-                    width: 50%;
+                    width: 100%;
                     display: flex;
                     justify-content: center;
                     align-items: center;
                     font-size: 20px;
+                    height: 100%;
+                    margin: 0;
+
+                    .clock_text {
+                        margin: 0;
+                    }
                 }
 
                 .logo {
                     height: 100%;
-                    width: 50%;
+                    aspect-ratio: 1/1;
                     padding: 5px;
+                    flex-shrink: 0;
 
                     svg {
                         width: 100%;
@@ -151,6 +160,89 @@
                     object-fit: contain;
                 }
             }
+
+            .section_showtype{
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                width: 44px;
+                height: 130px;
+                padding: 5px;
+                border: 2px solid var(--ColorBlack);
+                background-color: var(--ColorBackground);
+                border-radius: 20px;
+
+                .showtype_highlight{
+                    position: absolute;
+                    top: 5px;
+                    left: 5px;
+                    right: 5px;
+                    height: calc((100% - 10px) / 3);
+                    background-color: var(--ColorPrimary);
+                    border-radius: 12px;
+                    transition: transform 0.2s ease-in-out;
+                    z-index: 0;
+                }
+
+                .showtype_icon{
+                    position: relative;
+                    z-index: 1;
+                    width: 24px;
+                    height: 24px;
+                    margin: auto;
+                    object-fit: contain;
+                    opacity: 0.35;
+                    cursor: pointer;
+                    transition: opacity 0.2s ease-in-out;
+
+                    &.active{
+                        opacity: 1;
+                    }
+                }
+            }
+        }
+
+        .section_manualcode{
+            position: absolute;
+            left: 2cqw;
+            bottom: 12cqw;
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+            box-shadow: 0px -5px 20px 0px var(--ColorBlack);
+
+            .manualcode_input{
+                width: 130px;
+                padding: 10px;
+                border: 2px solid var(--ColorBlack);
+                background-color: var(--ColorBackground);
+                color: var(--ColorWhite);
+                border-radius: 10px;
+                font-size: 18px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+
+                &::placeholder{
+                    text-transform: none;
+                    letter-spacing: normal;
+                    color: var(--ColorGray);
+                }
+            }
+
+            .manualcode_button{
+                padding: 10px 15px;
+                border: 2px solid var(--ColorBlack);
+                background-color: var(--ColorPrimary);
+                color: var(--ColorWhite);
+                text-decoration: none;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-weight: 600;
+            }
         }
 
         .section_extras{
@@ -182,9 +274,11 @@
             background-color: var(--ColorBackground);
             left: 0;
             right: 0;
-            height: 70px;
+            height: 10cqh;
             border-radius: 0 0 10px 10px;
             display: flex;
+
+                box-shadow: 0px -5px 15px 5px var(--ColorBlack);
 
             .section_numbers_entry{
                 height: 100%;
@@ -217,7 +311,7 @@
             top: 10%;
             left: 10%;
             right: 10%;
-            bottom: 10%;
+            bottom: calc(10% + 60px);
             background-color: var(--ColorBackground);
             display: flex;
             flex-direction: column;
@@ -228,7 +322,8 @@
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 0 10px 5px var(--ColorWhite);
-            padding: 10px;
+            padding: 0;
+            z-index: 10;
 
             hr{
                 opacity: 0.2;

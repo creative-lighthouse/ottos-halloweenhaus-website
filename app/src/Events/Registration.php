@@ -14,6 +14,7 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Encoding\Encoding;
 use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\ReadonlyField;
 use Endroid\QrCode\RoundBlockSizeMode;
 use SilverStripe\SiteConfig\SiteConfig;
 use Endroid\QrCode\ErrorCorrectionLevel;
@@ -55,6 +56,7 @@ class Registration extends DataObject
         "Type" => "Varchar(255)",
         "ZIP" => "Varchar(5)",
         "ConfirmSecurityID" => "Varchar(3)",
+        "CheckInCode" => "Varchar(8)",
     ];
 
     private static $has_one = [
@@ -74,19 +76,22 @@ class Registration extends DataObject
         "Status" => "Status",
         "GroupSize" => "Gruppengröße",
         "ZIP" => "PLZ",
+        "CheckInCode" => "Check-In-Code",
     ];
 
     private static $summary_fields = [
         "StatusText" => "Status",
         "Title" => "Name",
         "Email" => "E-Mail",
-        "ZIP" => "PLZ",
-        "Created" => "Datum",
+        "Event.DateFormatted" => "Datum",
+        "TimeSlot.SlotTimeFormatted" => "Slotzeit",
+        "GroupSize" => "Personen",
     ];
 
     private static $searchable_fields = [
         "Title",
         "Email",
+        "CheckInCode",
     ];
 
     private static $table_name = "Registration";
@@ -113,6 +118,10 @@ class Registration extends DataObject
         $fields->removeByName("Type");
         $fields->removeByName("ConfirmSecurityID");
 
+        // Auto-generated in onBeforeWrite() - never hand-edited, since staff
+        // read it back off the ticket to manually check a guest in.
+        $fields->replaceField("CheckInCode", ReadonlyField::create("CheckInCode", "Check-In-Code"));
+
         return $fields;
     }
 
@@ -137,6 +146,29 @@ class Registration extends DataObject
         if (!$this->ConfirmSecurityID) {
             $this->ConfirmSecurityID = str_pad((string) random_int(0, 999), 3, "0", STR_PAD_LEFT);
         }
+
+        if (!$this->CheckInCode) {
+            do {
+                $code = self::generateCheckInCode();
+            } while (self::get()->filter("CheckInCode", $code)->exists());
+            $this->CheckInCode = $code;
+        }
+    }
+
+    /**
+     * 8 characters from a 32-symbol alphabet (digits + uppercase letters,
+     * excluding 0/O/1/I which are easy to mix up when read off a screen in
+     * bad lighting) - a manual fallback for checking a guest in when their
+     * QR code can't be scanned.
+     */
+    private static function generateCheckInCode(): string
+    {
+        $alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+        $code = "";
+        for ($i = 0; $i < 8; $i++) {
+            $code .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+        return $code;
     }
 
     function onAfterWrite()
