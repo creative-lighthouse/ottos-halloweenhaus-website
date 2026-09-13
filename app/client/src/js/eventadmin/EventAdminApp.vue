@@ -40,6 +40,12 @@ const showType = computed(() => showTypeOptions[showTypeIndex.value]);
 // let in as part of the group, not just a headcount.
 const checkedInHashes = ref([]);
 
+// Ripple that expands from the "Show betreten" button to cover the whole
+// screen and fades out - visual confirmation that the group was let in.
+const enterEffectActive = ref(false);
+const enterEffectKey = ref(0);
+const enterEffectStyle = ref({});
+
 let currentEventId = null;
 let currentCode = null;
 let currentHash = null;
@@ -171,11 +177,37 @@ function decreaseSQ() {
     }
 }
 
-function enterShow() {
+function triggerEnterEffect(originEl) {
+    const rect = originEl.getBoundingClientRect();
+    const originX = rect.left + rect.width / 2;
+    const originY = rect.top + rect.height / 2;
+
+    // Scale the ripple up far enough from its origin to cover the corner
+    // that's furthest away, whichever screen size/position that turns out to be.
+    const maxDistance = Math.max(
+        Math.hypot(originX, originY),
+        Math.hypot(window.innerWidth - originX, originY),
+        Math.hypot(originX, window.innerHeight - originY),
+        Math.hypot(window.innerWidth - originX, window.innerHeight - originY),
+    );
+
+    enterEffectStyle.value = {
+        left: `${originX}px`,
+        top: `${originY}px`,
+        '--enter-effect-scale': (maxDistance / 10) + 2,
+    };
+    enterEffectKey.value++;
+    enterEffectActive.value = true;
+}
+
+function enterShow(event) {
     if (amountTT.value === 0) {
         return;
     }
-    navigator.vibrate?.(1200);
+    navigator.vibrate?.(300);
+    if (event?.currentTarget) {
+        triggerEnterEffect(event.currentTarget);
+    }
 
     fetch('./api/enterShow', {
         method: 'POST',
@@ -368,5 +400,13 @@ onBeforeUnmount(() => {
         <div class="section_loading" :style="{ display: loading ? 'flex' : 'none' }">
             <p>Loading...</p>
         </div>
+
+        <div
+            v-if="enterEffectActive"
+            :key="enterEffectKey"
+            class="enter_effect"
+            :style="enterEffectStyle"
+            @animationend="enterEffectActive = false"
+        ></div>
     </div>
 </template>
