@@ -27,6 +27,7 @@ use App\Events\Event;
 use App\Events\EntryLog;
 use App\Events\Registration;
 use App\Feedback\FeedbackEntry;
+use App\ShowController\ShowControllerEntry;
 use App\Statistics\PostalCodeResolver;
 use App\Team\TeamMember;
 use App\Wiki\Artefact;
@@ -60,6 +61,7 @@ class ApiPageController extends ContentController
         "addPOSSale",
         "wikiindex",
         "recentEntries",
+        "addShowControllerData",
     ];
 
     public function index(HTTPRequest $request)
@@ -254,6 +256,35 @@ class ApiPageController extends ContentController
         }
 
         return json_encode($data);
+    }
+
+    /**
+     * Stores the raw JSON payload posted by the external show controller
+     * software (polls roughly every 5 seconds) as-is, so it can be parsed
+     * and worked with later. Requires a valid API key, sent as the
+     * "X-Api-Key" request header.
+     */
+    public function addShowControllerData(HTTPRequest $request)
+    {
+        $this->response->addHeader('Content-Type', 'application/json');
+
+        if (!ApiKey::isValidToken($request->getHeader('X-Api-Key'))) {
+            $this->response->setStatusCode(401);
+            return json_encode(["error" => "Ungültiger oder fehlender API-Schlüssel."]);
+        }
+
+        $body = $request->getBody();
+        if (!$body) {
+            $this->response->setStatusCode(400);
+            return json_encode(["error" => "Keine Daten empfangen."]);
+        }
+
+        $entry = ShowControllerEntry::create();
+        $entry->Payload = $body;
+        $entry->ReceivedAt = date("Y-m-d H:i:s");
+        $entry->write();
+
+        return json_encode(["Valid" => true, "id" => $entry->ID]);
     }
 
     public function checkIn(HTTPRequest $request)
