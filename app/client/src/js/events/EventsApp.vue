@@ -256,22 +256,22 @@ onBeforeUnmount(() => {
                     Weitere Zeitslots werden regelmäßig freigeschaltet. Unsere reguläre Warteschlange vor
                     Ort hat zusätzlich geöffnet und benötigt keine Buchung.
                 </p>
-                <button class="timeslot_dialog_button" type="button" @click="infoDialog?.showModal()">
+                <button class="timeslot_dialog_button link--button button--primary" type="button" @click="infoDialog?.showModal()">
                     Weitere Informationen
                 </button>
-                <dialog ref="infoDialog" class="timeslot_dialog">
+                <dialog ref="infoDialog" class="timeslot_dialog bg-white">
                     <h1 class="text-center">Hinweis zu den Zeitslots der Halloween Shows</h1>
                     <p class="text-center">
                         Sollte kein passender Zeitslot verfügbar sein,
                         <strong>versuche es bitte später erneut oder komm einfach vorbei</strong>
-                        und stelle dich in die <strong>reguläre Warteschlange.</strong>
+                        und stelle Dich in die <strong>reguläre Warteschlange.</strong>
                     </p>
                     <p class="text-center">
                         Die <strong>digitalen Zeitslots für die Halloween-Shows</strong> sind aufgrund der
                         hohen Nachfrage limitiert. Regelmäßig werden neue Plätze freigeschaltet.
                     </p>
                     <p class="text-center">
-                        Sollte deine Gruppe <strong>größer als {{ data.maxGroupSize }} Personen sein</strong>,
+                        Sollte Deine Gruppe <strong>größer als {{ data.maxGroupSize }} Personen sein</strong>,
                         buche gerne zwei aufeinander folgende Zeitslots und gib am Eingang Bescheid. Ihr könnt
                         dann auch gemeinsam die Show genießen.
                     </p>
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
                         Weitere Informationen zu den Zeitslots, unserer virtuellen Warteschlange, dem Einlass
                         und der Show findest Du auch in unseren <a href="/faq">FAQs</a>.
                     </p>
-                    <button class="timeslot_dialog_button" type="button" @click="infoDialog?.close()">
+                    <button class="timeslot_dialog_button link--button button--secondary" type="button" @click="infoDialog?.close()">
                         Schließen
                     </button>
                 </dialog>

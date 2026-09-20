@@ -51,7 +51,7 @@
                 "@context": "https://schema.org",
                 "@type": "LocalBusiness",
                 "name": "Ottos Halloweenhaus",
-                "image": "https://ottos-halloweenhaus.de/assets/hwhs_logo2026_profile_white.png",
+                "image": "https://ottos-halloweenhaus.de/_resources/app/client/images/ohh_logo2026_profile_white.png",
                 "description": "Ottos Halloweenhaus ist ein jährliches Event von Künstlerinnen und Künstlern rund um Stormarn. Hier fließen Dekorationen, Musik, Lichtdesign, Informatik, Schauspiel, Robotik, Film und viele weitere Fähigkeiten zusammen in eine etwa zwanzigminütige Show, welche das Highlight auf jeder Halloween Route ist.",
                 "url": "https://ottos-halloweenhaus.de/",
                 "email": "kontakt@ottos-halloweenhaus.de",

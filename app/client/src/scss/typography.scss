@@ -143,7 +143,45 @@ a, button{
 
     &:hover {
         text-decoration: none;
-        color: var(--ColorPrimaryLight);
+    }
+}
+
+.bg-white{
+    p {
+        a {
+            color: var(--ColorBlack);
+            transition: all 0.3s ease-in-out;
+
+            &::after, &::before {
+                background-color: var(--ColorPrimary);
+            }
+
+            &:hover{
+                color: var(--ColorWhite);
+            }
+        }
+    }
+
+    button.link--button{
+        color: var(--ColorGray);
+        background-color: var(--ColorWhite);
+        border-color: var(--ColorGray);
+
+        &:hover {
+            color: var(--ColorWhite);
+            background-color: var(--ColorGray);
+        }
+
+        &.button--primary{
+            background-color: var(--ColorPrimary);
+            color: var(--ColorWhite);
+            border-color: var(--ColorPrimary);
+
+            &:hover {
+                background-color: var(--ColorWhite);
+                color: var(--ColorPrimary);
+            }
+        }
     }
 }
 

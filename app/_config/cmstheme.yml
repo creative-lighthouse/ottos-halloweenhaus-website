@@ -27,6 +27,7 @@ SilverStripe\Admin\LeftAndMain:
         - SilverStripe-CMS-Controllers-CMSMain
         - App-Team-TeamAdmin
         - App-Wiki-WikiAdmin
+        - SilverStripe-AssetAdmin-Controller-AssetAdmin
     Vor Ort:
       icon_class: 'sp-icon-institution-admin-currentColor' # (optional) Defaults to 'fa-solid fa-cubes'
       priority: -80 # (optional) Defaults to menu item order
@@ -36,6 +37,7 @@ SilverStripe\Admin\LeftAndMain:
         - App-ImageBooth-ImageBoothAdmin
         - App-POS-POSAdmin
         - App-Feedback-FeedbackAdmin
+        - App-ShowController-ShowControllerAdmin
     Marketing:
       icon_class: 'sp-icon-news-admin-currentColor' # (optional) Defaults to 'fa-solid fa-cubes'
       priority: -90 # (optional) Defaults to menu item order
@@ -48,7 +50,6 @@ SilverStripe\Admin\LeftAndMain:
       items:
         - SilverStripe-SiteConfig-SiteConfig
         - SilverStripe-Admin-SecurityAdmin
-        - SilverStripe-AssetAdmin-Controller-AssetAdmin
         - SilverStripe-CampaignAdmin-CampaignAdmin
         - SilverStripe-VersionedAdmin-ArchiveAdmin
         - SilverStripe-Reports-ReportAdmin

@@ -33,7 +33,7 @@ class EventTimeSlot extends DataObject
         "Parent" => Event::class,
     ];
 
-    private static $belongs_many = [
+    private static $has_many = [
         "Registrations" => Registration::class,
     ];
 

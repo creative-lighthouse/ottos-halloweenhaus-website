@@ -92,7 +92,7 @@ onMounted(() => {
             {{ coupon.message }}
         </p>
 
-        <a v-if="coupon.valid" class="coupon_reset" @click="resetCoupon">X Coupon entfernen</a>
+        <a v-if="coupon.valid" class="coupon_reset link--button button--secondary" @click="resetCoupon">X Coupon entfernen</a>
         <p v-if="coupon.description" class="coupon_description">{{ coupon.description }}</p>
     </div>
 </template>

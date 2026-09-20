@@ -1,4 +1,4 @@
-<div class="section section--events registrationfull">
+<section class="section section--events registrationfull">
     <div class="section_content">
         <h1>$Title</h1>
         <hr>
@@ -8,4 +8,4 @@
         <p>Gleich mal nachsehen: <a href="$Top.Link">Zurück zur Übersicht</a></p>
         <img class="section_emoji" src="../_resources/app/client/images/sticker_sad.png">
     </div>
-</div>
+</section>

@@ -15,13 +15,6 @@ use SilverStripe\Security\Security;
  */
 class EventAdminPageController extends PageController
 {
-
-    private static $allowed_actions = [
-        "checkRegistration",
-        "checkIn",
-        "cancel",
-    ];
-
     public function index(HTTPRequest $request)
     {
         $currentuser = Security::getCurrentUser();

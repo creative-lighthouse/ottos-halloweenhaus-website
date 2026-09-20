@@ -40,7 +40,6 @@ class EventPageController extends PageController
     }
 
     private static $allowed_actions = [
-        "view",
         "register",
         "completeregistration",
         "RegistrationForm",
@@ -64,15 +63,6 @@ class EventPageController extends PageController
         return array(
             "UsesCoupon" => $request->getVar("coupon"),
             "PreselectEventID" => null,
-        );
-    }
-
-    public function view(HTTPRequest $request)
-    {
-        $id = $this->getRequest()->param("ID");
-        $article = Event::get()->byId($id);
-        return array(
-            "Event" => $article,
         );
     }
 

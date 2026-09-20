@@ -365,7 +365,7 @@ class Registration extends DataObject
             "classId" => $classId,
             "state" => $this->Status === "Cancelled" ? "INACTIVE" : "ACTIVE",
             "logo" => [
-                "sourceUri" => ["uri" => "https://ottos-halloweenhaus.de/assets/hwhs_logo2026_profile_white.png"],
+                "sourceUri" => ["uri" => "https://ottos-halloweenhaus.de/_resources/app/client/images/ohh_logo2026_profile_white.png"],
             ],
             "cardTitle" => ["defaultValue" => ["language" => "de", "value" => $this->Event ? $this->Event->Title : "Ottos Halloweenhaus"]],
             "header" => ["defaultValue" => ["language" => "de", "value" => $this->Title]],

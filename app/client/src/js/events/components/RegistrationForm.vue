@@ -88,7 +88,7 @@ function onSubmit(event) {
                 >
                 <p v-if="errors.Email" class="form_error">{{ errors.Email }}</p>
                 <p v-else-if="emailLooksProblematic" class="form_hint form_hint--warn">
-                    Achtung: GMX- und Web.de-Adressen empfangen unsere Mails aktuell nicht zuverlässig. Schreib uns an events@ottos-halloweenhaus.de solltest du keine Mail erhalten.
+                    Achtung: GMX- und Web.de-Adressen empfangen unsere Mails aktuell nicht zuverlässig.<br>Wenn Du nach dem Absenden keine E-Mail erhältst, schreib uns bitte an events@ottos-halloweenhaus.de.
                 </p>
             </div>
 

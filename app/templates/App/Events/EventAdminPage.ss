@@ -39,7 +39,7 @@
 </head>
 <body class="ticket">
     <% if $CurrentUser %>
-        <div class="section section--EventsAdmin eventadmin-page"></div>
+        <section class="section section--EventsAdmin eventadmin-page"></section>
     <% end_if %>
 
     <script type="module" src="$Vite('app/client/src/js/main.js')"></script>

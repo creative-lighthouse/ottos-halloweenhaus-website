@@ -1,4 +1,4 @@
-<div class="section section--events">
+<section class="section section--events">
     <div class="section_content">
         <h1>$Title</h1>
 
@@ -13,4 +13,4 @@
             <p>Aktuell sind keine Veranstaltungen verfügbar. Schau später wieder vorbei!</p>
         <% end_if %>
     </div>
-</div>
+</section>

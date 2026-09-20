@@ -5,16 +5,16 @@
     xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>$Title</title>
-    <atom:link href="https://halloweenhaus-schmalenbeck.de/podcast"
+    <atom:link href="https://ottos-halloweenhaus.de/podcast"
         rel="self" type="application/rss+xml" />
-    <link>https://halloweenhaus-schmalenbeck.de/</link>
+    <link>https://ottos-halloweenhaus.de/</link>
     <language>ger-de</language>
     <copyright>&#169; 2024 Halloweenhaus Schmalenbeck</copyright>
     <itunes:author>Halloweenhaus Schmalenbeck</itunes:author>
     <description>$Description</description>
     <itunes:summary>$Description</itunes:summary>
     <itunes:type>episodic</itunes:type>
-    <itunes:new-feed-url>https://halloweenhaus-schmalenbeck.de/podcast/</itunes:new-feed-url>
+    <itunes:new-feed-url>https://ottos-halloweenhaus.de/podcast/</itunes:new-feed-url>
     <itunes:image
       href="$CoverImage.AbsoluteLink"
     />
@@ -26,7 +26,7 @@
     <itunes:explicit>false</itunes:explicit>
     <% loop $Episodes %>
     <item>
-      <link>https://halloweenhaus-schmalenbeck.de/podcast/view/$ID</link>
+      <link>https://ottos-halloweenhaus.de/podcast/view/$ID</link>
       <itunes:episodeType>full</itunes:episodeType>
       <itunes:episode>$Episode</itunes:episode>
       <itunes:season>$Season</itunes:season>

@@ -54,14 +54,11 @@ class Event extends DataObject
 
     private static $has_many = [
         "TimeSlots" => EventTimeSlot::class,
+        "Registrations" => Registration::class,
     ];
 
     private static $owns = [
         "Image"
-    ];
-
-    private static $belongs_many = [
-        "Registrations" => Registration::class,
     ];
 
     private static $default_sort = "EventDate ASC, StartTime ASC";
@@ -148,7 +145,7 @@ class Event extends DataObject
     {
         $holderNew = EventPage::get()->sort("ID", "ASC")->First();
         if ($holderNew) {
-            return $holderNew->AbsoluteLink("view/") . $this->ID;
+            return $holderNew->AbsoluteLink();
         }
         return "/404";
     }

@@ -268,7 +268,7 @@ onMounted(async () => {
         }
 
         const decodedUrl = new URL(result);
-        const allowedHosts = ['localhost', 'halloweenhaus-schmalenbeck.de', 'halloweenhaus-website.ddev.site', 'ottos-halloweenhaus.de'];
+        const allowedHosts = ['localhost', 'ottos-halloweenhaus.de', 'halloweenhaus-website.ddev.site', 'ottos-halloweenhaus.de'];
         if (!allowedHosts.includes(decodedUrl.hostname)) {
             return;
         }
