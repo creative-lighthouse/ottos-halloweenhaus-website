@@ -1,10 +1,10 @@
 <div class="section section--feedback">
     <div class="section_content">
-        <h1>Wir freuen uns auf dein Feedback</h1>
+        <h1>Wir freuen uns auf Dein Feedback</h1>
 
         <form class="feedback_form" method="post" action="$Link('sendfeedback')">
             <div class="form-group">
-                <p>An welchem Tag warst/bist du da?</p>
+                <p>An welchem Tag warst/bist Du da?</p>
                 <div class="switch">
                     <% loop $EventDates.GroupedBy('EventDate') %>
                         <input type="radio" name="day" id="day-$Children.First.ID" value="$Children.First.EventDate" required>
@@ -18,7 +18,7 @@
 
             <div class="container">
                 <div class="feedback">
-                    <p>Wie hat dir die Show gefallen?</p>
+                    <p>Wie hat Dir die Show gefallen?</p>
                     <div class="rating">
                         <input type="radio" name="rating" id="rating-5" value="5" required>
                         <label for="rating-5"></label>
@@ -45,17 +45,17 @@
             </div>
 
             <div class="form-group">
-                <label for="comment">Was hat dir gut gefallen oder was könnten wir nächstes Jahr verbessern?</label>
+                <label for="comment">Was hat Dir gut gefallen oder was könnten wir nächstes Jahr verbessern?</label>
                 <textarea rows="3" cols="33" class="form-control" id="comment" name="comment"></textarea>
             </div>
 
             <div class="form-group">
-                <label for="PLZ">Wie lautet deine Postleitzahl (optional)?</label>
+                <label for="PLZ">Wie lautet Deine Postleitzahl (optional)?</label>
                 <input type="text" class="form-control" id="plz" name="plz" maxlength="5" pattern="[0-9]*" inputmode="numeric">
             </div>
 
             <div class="form-group">
-                <input type="submit" class="btn btn-primary" name="submit" value="Feedback senden">
+                <input type="submit" class="link--button button--primary" name="submit" value="Feedback senden">
             </div>
         </form>
     </div>
