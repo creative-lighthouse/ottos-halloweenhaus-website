@@ -105,11 +105,11 @@ function onSubmit(event) {
 
             <div class="field field--checkbox">
                 <label>
-                    <input v-model="form.DataPrivacy" type="checkbox" name="DataPrivacy" value="1">
+                    <input v-model="form.DataPrivacy" type="checkbox" name="DataPrivacy" value="1" aria-label="Datenschutzerklärung akzeptieren">
                     <span>
-                        Ich habe die
-                        <a href="impressum-und-datenschutz">Datenschutzerklärung</a>
-                        gelesen und willige ein, dass meine Daten im Sinne der DSGVO verwendet werden.
+                        <p>Ich habe die
+                        <a href="impressum-und-datenschutz" target="_blank">Datenschutzerklärung</a>
+                        gelesen und willige ein, dass meine Daten im Sinne der DSGVO verwendet werden.</p>
                     </span>
                 </label>
                 <p v-if="errors.DataPrivacy" class="form_error">{{ errors.DataPrivacy }}</p>
