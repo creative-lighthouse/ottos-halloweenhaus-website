@@ -5,8 +5,3 @@
         <img class="section_emoji" src="../_resources/app/client/images/sticker_rolling.png">
     </div>
 </section>
-<section class="section section--events">
-    <div class="section_content">
-        <a href="/" class="link--button">Zurück zur Startseite</a>
-    </div>
-</section>
