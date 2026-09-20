@@ -69,6 +69,13 @@ section.section--TextImageElement {
         }
     }
 
+    
+    .section_button {
+        .link--button{
+            margin-right: 10px;
+        }        
+    }
+
     &:not(:has(.section_image, .section_embed)) {
         .section_text {
             grid-column: 3 / -3;
@@ -112,6 +119,10 @@ section.section--TextImageElement {
                 @include media(max-medium) {
                     .section_button {
                         margin: 0 auto;
+
+                        .link--button{
+                            margin-top: 10px;
+                        }
                     }
                 }
             }
