@@ -39,6 +39,7 @@ jobs:
             --exclude='.env' \
             --exclude='.ddev' \
             --exclude='public/assets/' \
+            --exclude='app/_secrets/' \
             ./ speuni@www553.your-server.de:public_html/ottos-halloweenhaus/2026/
 
       - name: Run post-deploy tasks on server
