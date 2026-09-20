@@ -310,9 +310,9 @@ class Registration extends DataObject
 
     public function getValidateLink()
     {
-        $adminPage = EventAdminPage::get()->first();
-        if ($adminPage) {
-            return $adminPage->AbsoluteLink("checkRegistration") . "/" . $this->Hash;
+        $holder = EventPage::get()->sort("ID", "ASC")->First();
+        if ($holder) {
+            return $holder->AbsoluteLink("ticket") . "/" . $this->Hash;
         }
         return "/404";
     }

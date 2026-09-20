@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
                         <h2 class="status_title">
                             {{ ticket.Status === 'Cancelled' ? 'Buchung deaktiviert' : 'Check-In erfolgreich' }}
                         </h2>
-                        <h3 v-if="ticket.Status !== 'Cancelled'" class="status_subline">Vielen Dank für deinen Besuch</h3>
+                        <h3 v-if="ticket.Status !== 'Cancelled'" class="status_subline">Vielen Dank für Deinen Besuch</h3>
                         <a v-if="ticket.FeedbackPageLink" :href="ticket.FeedbackPageLink" class="status_button">Feedback abgeben</a>
                     </div>
                 </div>
