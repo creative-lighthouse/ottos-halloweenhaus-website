@@ -94,6 +94,31 @@ p {
 a, button{
     cursor: pointer;
     color: var(--ColorWhite);
+    &::after, &::before {
+        position:absolute;
+        content: "";
+        height: 1px;
+        background-color: var(--ColorWhite);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transition: all 0.3s ease-in-out;
+    }
+
+    &::before {
+        z-index: -1;
+    }
+
+    &:hover {
+        &::before {
+            background-color: var(--ColorPrimary);
+            height: calc(100% + 2px);
+            z-index: -1;
+            left: -2px;
+            right: -2px;
+            border-radius: 5px;
+        }
+    }
 
     &.no_deco{
         text-decoration: none;
@@ -138,11 +163,6 @@ a, button{
                 color: var(--ColorWhite);
             }
         }
-
-    }
-
-    &:hover {
-        text-decoration: none;
     }
 }
 
