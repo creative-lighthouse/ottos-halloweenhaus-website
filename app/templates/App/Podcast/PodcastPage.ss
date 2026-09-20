@@ -9,8 +9,8 @@
         rel="self" type="application/rss+xml" />
     <link>https://ottos-halloweenhaus.de/</link>
     <language>ger-de</language>
-    <copyright>&#169; 2024 Halloweenhaus Schmalenbeck</copyright>
-    <itunes:author>Halloweenhaus Schmalenbeck</itunes:author>
+    <copyright>&#169; 2026 Ottos Halloweenhaus</copyright>
+    <itunes:author>Ottos Halloweenhaus</itunes:author>
     <description>$Description</description>
     <itunes:summary>$Description</itunes:summary>
     <itunes:type>episodic</itunes:type>
