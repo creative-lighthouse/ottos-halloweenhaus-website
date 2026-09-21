@@ -39,7 +39,7 @@ class EventCoupon extends DataObject
         "Registrations" => Registration::class,
     ];
 
-    private static $default_sort = "Title ASC";
+    private static $default_sort = "ExpiryDate DESC, Title ASC";
 
     private static $field_labels = [
         "Title" => "Titel",
@@ -53,7 +53,7 @@ class EventCoupon extends DataObject
         "Title" => "Titel",
         "Type" => "Typ",
         "UsedCount" => "Anzahl Verwendet",
-        "ExpiryDate" => "Ablaufdatum",
+        "ExpiryDateFormatted" => "Ablaufdatum",
     ];
 
     private static $searchable_fields = [
@@ -83,7 +83,20 @@ class EventCoupon extends DataObject
 
     public function getUsedCount()
     {
+        if (!$this->ID) {
+            return 0;
+        }
+
         return Registration::get()->filter("UsedCouponID", $this->ID)->count();
+    }
+
+    public function getExpiryDateFormatted()
+    {
+        if (!$this->ExpiryDate) {
+            return "–";
+        }
+
+        return date("d.m.y", strtotime($this->ExpiryDate));
     }
 
     public function isExpired()
