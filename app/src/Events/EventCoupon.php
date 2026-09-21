@@ -16,6 +16,7 @@ use SilverStripe\Forms\DropdownField;
  * @property ?string $Hash
  * @property int $UsedCount
  * @property int $MaxUses
+ * @property ?string $ExpiryDate
  * @mixin FileLinkTracking
  * @mixin AssetControlExtension
  * @mixin SiteTreeLinkTracking
@@ -31,6 +32,7 @@ class EventCoupon extends DataObject
         "Hash" => "Varchar(255)",
         "UsedCount" => "Int",
         "MaxUses" => "Int",
+        "ExpiryDate" => "Date",
     ];
 
     private static $belongs_many = [
@@ -44,12 +46,14 @@ class EventCoupon extends DataObject
         "Description" => "Beschreibung",
         "Type" => "Typ",
         "Hash" => "Code",
+        "ExpiryDate" => "Ablaufdatum",
     ];
 
     private static $summary_fields = [
         "Title" => "Titel",
         "Type" => "Typ",
         "UsedCount" => "Anzahl Verwendet",
+        "ExpiryDate" => "Ablaufdatum",
     ];
 
     private static $searchable_fields = [
@@ -80,6 +84,16 @@ class EventCoupon extends DataObject
     public function getUsedCount()
     {
         return Registration::get()->filter("UsedCouponID", $this->ID)->count();
+    }
+
+    public function isExpired()
+    {
+        if (!$this->ExpiryDate) {
+            return false;
+        }
+
+        $today = (new DateTime())->format("Y-m-d");
+        return $today > $this->ExpiryDate;
     }
 
     public function onBeforeWrite()

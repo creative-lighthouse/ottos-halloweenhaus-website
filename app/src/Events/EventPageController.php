@@ -91,7 +91,10 @@ class EventPageController extends PageController
         $coupon = EventCoupon::get()->filter("Hash", $hash)->First();
 
         if ($coupon) {
-            if ($coupon->MaxUses > 0 && $coupon->UsedCount >= $coupon->MaxUses) {
+            if ($coupon->isExpired()) {
+                $json["Valid"] = false;
+                $json["Message"] = "Dieser Code ist abgelaufen";
+            } elseif ($coupon->MaxUses > 0 && $coupon->UsedCount >= $coupon->MaxUses) {
                 $json["Valid"] = false;
                 if ($coupon->MaxUses == 1) {
                     $json["Message"] = "Dieser Code wurde bereits verwendet";
@@ -192,7 +195,7 @@ class EventPageController extends PageController
 
             if ($couponcode) {
                 $coupon = EventCoupon::get()->filter("Hash", $couponcode)->First();
-                if (!$coupon) {
+                if (!$coupon || $coupon->isExpired()) {
                     $result = $this->redirect($this->Link("couponinvalid/$event->ID"));
                     return;
                 }
