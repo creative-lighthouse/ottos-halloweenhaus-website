@@ -2,8 +2,13 @@
 
 namespace App\Team;
 
+use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
+use SilverStripe\Control\Email\Email;
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Core\Environment;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\View\Requirements;
 use SilverStripe\Security\SecurityToken;
 use App\Team\TeamApplication;
@@ -22,6 +27,11 @@ class ApplicationPageController extends Controller
     ];
 
     private static $url_segment = 'bewerbung';
+
+    /**
+     * Recipient of the admin notification for new applications
+     */
+    private static $notification_email = 'mitmachen@ottos-halloweenhaus.de';
 
     /**
      * Display the application form
@@ -68,13 +78,18 @@ class ApplicationPageController extends Controller
             return $this->httpError(405, 'Method not allowed');
         }
 
-        // Check security token
-        if (!SecurityToken::inst()->checkRequest($request)) {
-            return $this->httpError(403, 'Invalid security token');
-        }
-
         // Get form data
         $data = $request->postVars();
+
+        // Check security token. A mismatch usually means the session expired
+        // while the form was open (or an old copy of the page was restored
+        // from the browser cache), so send the applicant back with their
+        // input instead of a bare "Forbidden" page.
+        if (!SecurityToken::inst()->checkRequest($request)) {
+            $request->getSession()->set('ApplicationError', 'Deine Sitzung ist abgelaufen. Bitte löse die Rechenaufgabe erneut und sende das Formular noch einmal ab.');
+            $this->saveFormData($request, $data);
+            return $this->redirectBack();
+        }
 
         // Cooldown check (prevents brute-forcing the captcha)
         $nextAllowed = (int)$request->getSession()->get('CaptchaNextAllowed');
@@ -122,11 +137,58 @@ class ApplicationPageController extends Controller
             $application->Interests()->setByIDList($data['Interests']);
         }
 
+        $this->sendNotificationEmail($application);
+
         // Store success message in session
         $request->getSession()->set('ApplicationSubmitted', true);
 
         // Redirect back to application page
         return $this->redirect('/bewerbung/erfolgreich');
+    }
+
+    /**
+     * Notify the team about a new application. Failures are only logged – the
+     * application is already saved and visible in the CMS.
+     */
+    private function sendNotificationEmail(TeamApplication $application): void
+    {
+        $recipient = static::config()->get('notification_email');
+        if (!$recipient) {
+            return;
+        }
+
+        try {
+            // Same From logic as App\Events\EmailNotification: must stay on a
+            // domain we DKIM/SPF-sign (SS_ADMIN_EMAIL).
+            $fromAddress = Environment::getEnv('SS_ADMIN_EMAIL')
+                ?: Email::config()->get('admin_email')
+                ?: 'no-reply@' . parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
+
+            $birthday = $application->Birthday;
+            $timestamp = $birthday ? strtotime($birthday) : false;
+
+            $email = Email::create();
+            $email->setTo($recipient);
+            $email->setFrom($fromAddress, 'Ottos Halloweenhaus');
+            if (filter_var($application->Email, FILTER_VALIDATE_EMAIL)) {
+                $email->setReplyTo($application->Email, (string)$application->Title);
+            }
+            $email->setSubject('Neue Team-Bewerbung: ' . $application->Title);
+            $email->setHTMLTemplate('emails/TeamApplicationEmail');
+            $email->setPlainTemplate('emails/TeamApplicationEmailPlain');
+            $email->setData([
+                'Application' => $application,
+                'BirthdayFormatted' => $timestamp ? date('d.m.Y', $timestamp) : $birthday,
+                'CMSLink' => Director::absoluteURL(
+                    TeamAdmin::singleton()->getCMSEditLinkForManagedDataObject($application)
+                ),
+            ]);
+            $email->send();
+        } catch (\Throwable $e) {
+            Injector::inst()->get(LoggerInterface::class)->error(
+                'Team application notification could not be sent: ' . $e->getMessage()
+            );
+        }
     }
 
     private function saveFormData(HTTPRequest $request, array $data): void
