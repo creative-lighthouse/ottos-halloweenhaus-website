@@ -152,6 +152,10 @@ class Event extends DataObject
 
     public function getDateFormatted()
     {
+        if (!$this->EventDate) {
+            return "–";
+        }
+
         return date("d.m.y", strtotime($this->EventDate));
     }
 

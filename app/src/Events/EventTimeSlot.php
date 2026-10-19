@@ -136,11 +136,19 @@ class EventTimeSlot extends DataObject
 
     public function getSlotTimeFormatted()
     {
+        if (!$this->SlotTime) {
+            return "–";
+        }
+
         return date("H:i", strtotime($this->SlotTime));
     }
 
     public function getSlotTimeEndFormatted()
     {
+        if (!$this->SlotTime) {
+            return "–";
+        }
+
         $slotDuration = $this->Parent()->SlotDuration;
         $slotTime = strtotime($this->SlotTime);
         $slotTimeEnd = $slotTime + $slotDuration * 60;
