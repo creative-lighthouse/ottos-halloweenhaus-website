@@ -4,9 +4,11 @@ namespace App\Elements;
 
 use App\Elements\HeroSliderItem;
 use DNADesign\Elemental\Models\BaseElement;
+use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
+use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DB;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -17,6 +19,9 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * @property ?string $DateFrameTitle
  * @property ?string $DateFrameText
  * @property ?string $DateFrameSubText
+ * @property ?string $VideoURL
+ * @property int $VideoThumbnailID
+ * @method Image VideoThumbnail()
  * @method DataList<HeroSliderItem> HeroSliderItems()
  * @mixin FileLinkTracking
  * @mixin AssetControlExtension
@@ -31,9 +36,16 @@ class HeroSliderElement extends BaseElement
         "DateFrameTitle" => "Varchar(255)",
         "DateFrameText" => "Varchar(255)",
         "DateFrameSubText" => "Varchar(255)",
+        "VideoURL" => "Varchar(512)",
+    ];
+
+    private static $has_one = [
+        "VideoThumbnail" => Image::class,
     ];
 
     private static $field_labels = [
+        "VideoURL" => "Video-URL (HLS)",
+        "VideoThumbnail" => "Video-Vorschaubild",
     ];
 
     private static $has_many = [
@@ -42,6 +54,7 @@ class HeroSliderElement extends BaseElement
 
     private static $owns = [
         "HeroSliderItems",
+        "VideoThumbnail",
     ];
 
     public function inlineEditable()
@@ -60,12 +73,20 @@ class HeroSliderElement extends BaseElement
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-        $fields->removeByName("HeroSliderItems");
+        $fields->removeByName(["HeroSliderItems", "VideoURL", "VideoThumbnail"]);
 
         $gridFieldConfig = GridFieldConfig_RecordEditor::create(200);
         $gridfield = GridField::create("HeroSliderItems", "Hero Slider Items", $this->HeroSliderItems(), $gridFieldConfig);
         $gridfield->getConfig()->addComponent(GridFieldOrderableRows::create('SortOrder'));
         $fields->addFieldToTab('Root.Main', $gridfield);
+
+        $fields->addFieldsToTab('Root.Video', [
+            TextField::create("VideoURL", "Video-URL (HLS)")
+                ->setDescription("Bunny HLS-Playlist-URL (endet auf .m3u8). Wenn gesetzt, wird statt des Sliders das Video im Loop angezeigt."),
+            UploadField::create("VideoThumbnail", "Video-Vorschaubild")
+                ->setFolderName("HeroVideo")
+                ->setDescription("Wird angezeigt, solange das Video lädt (und bei reduzierter Bewegung)."),
+        ]);
         return $fields;
     }
 

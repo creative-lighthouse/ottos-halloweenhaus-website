@@ -35,7 +35,17 @@ section.section--HeroSlider {
             }
         }
 
-        
+
+        .hero_video {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9;
+            max-height: 80vh;
+            max-height: 80dvh;
+            object-fit: cover;
+            background: #000;
+        }
 
         @include media(max-maxwidth) {
             --HeroHeight: 500px;

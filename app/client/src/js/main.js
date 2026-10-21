@@ -8,6 +8,7 @@ import "./eventAdminPage";
 import "./glossar.js";
 import { initYoutubeConsent } from "./youtubeConsent.js";
 import { initAudioPlayers, initYoutubeAudioPlayers } from "./audioPlayer.js";
+import { initHeroVideos } from "./heroVideo.js";
 
 document.addEventListener("DOMContentLoaded", function (event) {
 
@@ -389,6 +390,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
         });
     });
 
+
+    initHeroVideos();
 
     /**
      * Our JavaScript function, which calculates the days, hours,
