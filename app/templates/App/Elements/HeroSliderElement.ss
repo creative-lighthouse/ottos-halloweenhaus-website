@@ -1,7 +1,9 @@
 <section class="section--HeroSlider">
     <div class="section_content">
         <% if $VideoURL %>
-            <video class="hero_video" data-hls-src="$VideoURL" muted autoplay loop playsinline preload="auto"<% if $VideoThumbnail.exists %> poster="$VideoThumbnail.FocusFill(1920,1080).URL"<% end_if %>></video>
+            <div class="hero_video_wrap">
+                <video class="hero_video" data-hls-src="$VideoURL" muted autoplay loop playsinline preload="auto"<% if $VideoThumbnail.exists %> poster="$VideoThumbnail.FocusFill(1920,1080).URL"<% end_if %>></video>
+            </div>
         <% else %>
             <div class="swiper--hero">
                 <div class="swiper-wrapper">
