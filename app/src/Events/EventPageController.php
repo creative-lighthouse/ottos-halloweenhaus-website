@@ -453,6 +453,7 @@ class EventPageController extends PageController
                     ? $event->Image()->FocusFill(500, 200)->URL
                     : null,
                 "slotDuration" => (int) $event->SlotDuration,
+                "hideQueueInfo" => (bool) $event->HideQueueInfo,
                 "date" => $dateKey,
                 "timeslots" => $timeslots,
                 "couponTimeslots" => $couponTimeslots,

@@ -237,8 +237,10 @@ onBeforeUnmount(() => {
                 <h2>3. Startzeit wählen</h2>
                 <div class="section_selectablelist">
                     <p v-if="noSlotsMessage" class="timeslot_card timeslot_card--text">
-                        Aktuell sind leider keine freien Zeitslots mehr verfügbar. Besuche uns dennoch
-                        gerne über die reguläre Warteschlange.
+                        Aktuell sind leider keine freien Zeitslots mehr verfügbar.
+                        <template v-if="!selectedEvent.hideQueueInfo">
+                            Besuche uns dennoch gerne über die reguläre Warteschlange.
+                        </template>
                     </p>
                     <div
                         v-for="slot in slotsForEvent"
@@ -252,11 +254,11 @@ onBeforeUnmount(() => {
                         <p class="timeslot_card_capacity">{{ slot.capacityLabel }}</p>
                     </div>
                 </div>
-                <p class="timeslot_info_text">
+                <p v-if="!selectedEvent?.hideQueueInfo" class="timeslot_info_text">
                     Weitere Zeitslots werden regelmäßig freigeschaltet. Unsere reguläre Warteschlange vor
                     Ort hat zusätzlich geöffnet und benötigt keine Buchung.
                 </p>
-                <button class="timeslot_dialog_button link--button button--primary" type="button" @click="infoDialog?.showModal()">
+                <button v-if="!selectedEvent?.hideQueueInfo" class="timeslot_dialog_button link--button button--primary" type="button" @click="infoDialog?.showModal()">
                     Weitere Informationen
                 </button>
                 <dialog ref="infoDialog" class="timeslot_dialog bg-white">

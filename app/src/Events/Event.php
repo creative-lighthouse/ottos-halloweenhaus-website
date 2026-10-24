@@ -24,6 +24,7 @@ use SilverStripe\Model\List\ArrayList;
  * @property ?string $InfoForAttendees
  * @property int $SlotDuration
  * @property bool $Visible
+ * @property bool $HideQueueInfo
  * @property int $ImageID
  * @method Image Image()
  * @method DataList<EventTimeSlot> TimeSlots()
@@ -46,6 +47,7 @@ class Event extends DataObject
         "InfoForAttendees" => "HTMLText",
         "SlotDuration" => "Int",
         "Visible" => "Boolean",
+        "HideQueueInfo" => "Boolean",
     ];
 
     private static $has_one = [
@@ -73,6 +75,7 @@ class Event extends DataObject
         "InfoForAttendees" => "Informationen für Teilnehmer",
         "Image" => "Bild",
         "SlotDuration" => "Dauer eines Slots (in Minuten)",
+        "HideQueueInfo" => "Hinweis zur regulären Warteschlange ausblenden",
     ];
 
     private static $summary_fields = [
