@@ -23,6 +23,7 @@ use Endroid\QrCode\ErrorCorrectionLevel;
 
 use App\ImageBooth\PhotoboxGalleryPage;
 use App\ImageBooth\BoothImage;
+use App\ImageBooth\OnrideImage;
 use App\Events\Event;
 use App\Events\EntryLog;
 use App\Events\Registration;
@@ -57,6 +58,7 @@ class ApiPageController extends ContentController
         "addImageFromBooth",
         "BoothImageEntryForm",
         "submitBoothImage",
+        "OnrideImageEntryForm",
         "statistics",
         "addPOSSale",
         "wikiindex",
@@ -369,17 +371,18 @@ class ApiPageController extends ContentController
 
     public function createQRCode(String $link)
     {
-        $qrCode = Builder::create()
-            ->writer(new PngWriter())
-            ->writerOptions([])
-            ->data($link)
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(ErrorCorrectionLevel::High)
-            ->size(300)
-            ->margin(10)
-            ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
-            ->validateResult(false)
-            ->build();
+        $builder = new Builder(
+            writer: new PngWriter(),
+            writerOptions: [],
+            validateResult: false,
+            data: $link,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 300,
+            margin: 10,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+        );
+        $qrCode = $builder->build();
         header('Content-Type: ' . $qrCode->getMimeType());
 
         return $qrCode->getDataUri();
@@ -402,11 +405,34 @@ class ApiPageController extends ContentController
 
     public function submit($data, $form)
     {
-        $entry = BoothImage::create();
+        return $this->saveImageEntry(BoothImage::create(), $form);
+    }
+
+    public function OnrideImageEntryForm()
+    {
+        $fields = FieldList::create([
+            TextField::create('Hash'),
+            FileField::create('Image')->setFolderName('OnrideImages'),
+        ]);
+        $actions = FieldList::create([
+            FormAction::create('submitOnride', 'Submit'),
+        ]);
+        return Form::create($this, 'OnrideImageEntryForm', $fields, $actions)
+            ->disableSecurityToken();
+    }
+
+    public function submitOnride($data, $form)
+    {
+        return $this->saveImageEntry(OnrideImage::create(), $form);
+    }
+
+    private function saveImageEntry(BoothImage $entry, Form $form)
+    {
         $form->saveInto($entry);
         $entry->isVisible = true;
         $entry->write();
 
+        $returndata = [];
         $photogallery = PhotoboxGalleryPage::get()->first();
         if ($photogallery) {
             $returndata["detaillink"] = $photogallery->AbsoluteLink("foto") . "/" . $entry->HashID;

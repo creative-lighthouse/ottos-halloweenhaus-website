@@ -4,6 +4,7 @@ namespace App\ImageBooth;
 
 use App\ImageBooth\BoothImage;
 use SilverStripe\Admin\ModelAdmin;
+use SilverStripe\ORM\DataList;
 use Colymba\BulkManager\BulkManager;
 use SilverStripe\Forms\GridField\GridFieldConfig;
 
@@ -27,6 +28,12 @@ class ImageBoothAdmin extends ModelAdmin
     public function init()
     {
         parent::init();
+    }
+
+    public function getList(): DataList
+    {
+        // Onride photos are managed in OnrideImageAdmin
+        return parent::getList()->filter("ClassName", BoothImage::class);
     }
 
     protected function getGridFieldConfig(): GridFieldConfig

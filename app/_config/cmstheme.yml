@@ -35,6 +35,7 @@ SilverStripe\Admin\LeftAndMain:
         - App-Events-EventAdmin
         - App-FleaMarket-FleaMarketAdmin
         - App-ImageBooth-ImageBoothAdmin
+        - App-ImageBooth-OnrideImageAdmin
         - App-POS-POSAdmin
         - App-Feedback-FeedbackAdmin
         - App-ShowController-ShowControllerAdmin

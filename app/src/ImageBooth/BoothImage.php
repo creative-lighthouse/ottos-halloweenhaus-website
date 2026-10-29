@@ -2,7 +2,6 @@
 
 namespace App\ImageBooth;
 
-use DateTime;
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DataObject;
 use Endroid\QrCode\Builder\Builder;
@@ -71,11 +70,10 @@ class BoothImage extends DataObject
     {
         parent::onBeforeWrite();
 
-        $now = new DateTime();
-        $now = $now->format("Y-m-d H:i:s");
-
-        if (!$this->HashID) {
-            $this->HashID = substr(md5(string: $now . $this->ID), 0, 5);
+        // Photobox and onride uploads can arrive within the same second,
+        // so the hash must be random and unique across both types
+        while (!$this->HashID || BoothImage::get()->filter("HashID", $this->HashID)->exclude("ID", $this->ID)->exists()) {
+            $this->HashID = substr(bin2hex(random_bytes(3)), 0, 5);
         }
     }
 
@@ -107,17 +105,18 @@ class BoothImage extends DataObject
             $validateLink = "/404";
         }
 
-        $qrCode = Builder::create()
-            ->writer(new PngWriter())
-            ->writerOptions([])
-            ->data($validateLink)
-            ->encoding(new Encoding('UTF-8'))
-            ->errorCorrectionLevel(ErrorCorrectionLevel::High)
-            ->size(300)
-            ->margin(10)
-            ->roundBlockSizeMode(RoundBlockSizeMode::Margin)
-            ->validateResult(false)
-            ->build();
+        $builder = new Builder(
+            writer: new PngWriter(),
+            writerOptions: [],
+            validateResult: false,
+            data: $validateLink,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: 300,
+            margin: 10,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+        );
+        $qrCode = $builder->build();
         header('Content-Type: ' . $qrCode->getMimeType());
         return $qrCode->getDataUri();
     }
