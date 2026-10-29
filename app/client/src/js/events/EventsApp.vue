@@ -235,6 +235,10 @@ onBeforeUnmount(() => {
         <Transition name="step">
             <div v-show="showStep3" ref="step3" class="events_navigator_step timeslots">
                 <h2>3. Startzeit wählen</h2>
+                <p v-if="!selectedEvent?.hideQueueInfo" class="timeslot_info_text">
+                    Hinweis: Unsere reguläre Warteschlange vor
+                    Ort hat zusätzlich geöffnet und benötigt keine Buchung.
+                </p>
                 <div class="section_selectablelist">
                     <p v-if="noSlotsMessage" class="timeslot_card timeslot_card--text">
                         Aktuell sind leider keine freien Zeitslots mehr verfügbar.
@@ -255,7 +259,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <p v-if="!selectedEvent?.hideQueueInfo" class="timeslot_info_text">
-                    Weitere Zeitslots werden regelmäßig freigeschaltet. Unsere reguläre Warteschlange vor
+                        Weitere Zeitslots werden regelmäßig freigeschaltet. Unsere reguläre Warteschlange vor
                     Ort hat zusätzlich geöffnet und benötigt keine Buchung.
                 </p>
                 <button v-if="!selectedEvent?.hideQueueInfo" class="timeslot_dialog_button link--button button--primary" type="button" @click="infoDialog?.showModal()">
