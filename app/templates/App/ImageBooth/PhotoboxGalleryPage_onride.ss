@@ -40,19 +40,22 @@
         <link rel="manifest" href="site.webmanifest" />
     </head>
     <body class="body--PhotoboxGalleryNewest body--PhotoboxGalleryOnride">
+        <canvas class="photobox_particles" aria-hidden="true"></canvas>
 
-        <div class="section section--PhotoboxGalleryNewest">
-            <h1>Speichere dir hier dein "OnRide"-Foto:</h1>
-            <div class="photobox_gallery">
-                <% loop $BoothImages.Limit(6) %>
-                    <div class="photobox_image">
-                        <p class="photobox_image_meta">$FormattedCreationDate</p>
-                        <div class="photobox_image_content">$Image.Fill(400, 400)</div>
-                        <div class="photobox_qrcode">
-                            <img src="$QRCode" alt="QR Code for Foto $HashID" />
+        <div class="section section--PhotoboxGalleryNewest section--PhotoboxGalleryOnride">
+            <h1>Speichere Dir hier dein "OnRide"-Foto:</h1>
+            <div class="photobox_gallery_wrapper">
+                <div class="photobox_gallery">
+                    <% loop $BoothImages.Limit(4) %>
+                        <div class="photobox_image">
+                            <p class="photobox_image_meta">$FormattedCreationDate</p>
+                            <div class="photobox_image_content">$Image.Fill(1280, 720)</div>
+                            <div class="photobox_qrcode">
+                                <img src="$QRCode" alt="QR Code for Foto $HashID" />
+                            </div>
                         </div>
-                    </div>
-                <% end_loop %>
+                    <% end_loop %>
+                </div>
             </div>
         </div>
         <script type="module" src="$Vite('app/client/src/js/main.js')"></script>
@@ -72,6 +75,57 @@
                 });
         }
         setInterval(reloadGallery, 30000);
+
+        // Langsam aufsteigende Partikel im Hintergrund
+        (function () {
+            const canvas = document.querySelector('.photobox_particles');
+            if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const ctx = canvas.getContext('2d');
+            const colors = ['255, 140, 40', '255, 190, 110', '200, 170, 255'];
+            let particles = [];
+
+            function createParticle(randomY) {
+                return {
+                    x: Math.random() * canvas.width,
+                    y: randomY ? Math.random() * canvas.height : canvas.height + 10,
+                    radius: Math.random() * 3 + 1.5,
+                    speed: Math.random() * 0.25 + 0.05,
+                    drift: Math.random() * Math.PI * 2,
+                    alpha: Math.random() * 0.5 + 0.15,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                };
+            }
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const count = Math.round(canvas.width * canvas.height / 20000);
+                particles = Array.from({ length: count }, () => createParticle(true));
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.y -= p.speed;
+                    p.drift += 0.005;
+                    p.x += Math.sin(p.drift) * 0.15;
+                    if (p.y < -10) particles[i] = createParticle(false);
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
+                    ctx.shadowColor = `rgba(${p.color}, 0.8)`;
+                    ctx.shadowBlur = p.radius * 4;
+                    ctx.fill();
+                }
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            draw();
+        })();
         </script>
     </body>
 </html>

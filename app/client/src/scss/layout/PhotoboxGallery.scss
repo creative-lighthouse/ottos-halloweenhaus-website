@@ -178,3 +178,62 @@
         }
     }
 }
+
+// Onride photos: 4 images in 16:9, arranged 2x2 and scaled to fit the screen
+.body--PhotoboxGalleryOnride{
+    background:
+        radial-gradient(ellipse at 15% 110%, rgba(255, 110, 20, 0.22), transparent 55%),
+        radial-gradient(ellipse at 85% -10%, rgba(110, 50, 170, 0.25), transparent 55%),
+        linear-gradient(160deg, #1b1424 0%, #121212 50%, #1d120c 100%);
+
+    .photobox_particles{
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+}
+
+.section.section--PhotoboxGalleryNewest.section--PhotoboxGalleryOnride{
+    position: relative;
+    z-index: 1;
+    background: none;
+
+    .photobox_gallery_wrapper{
+        flex: 1;
+        min-height: 0;
+        padding: 0 20px 20px 20px;
+        container-type: size;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .photobox_gallery{
+        width: min(100cqw, (100cqh - 10px) * 16 / 9 + 10px);
+        height: auto;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+        padding: 0;
+
+        .photobox_image{
+            height: auto;
+            aspect-ratio: 16 / 9;
+
+            .photobox_image_meta{
+                z-index: 1;
+                // Digits have no descenders, so the bottom offset is reduced
+                // to look the same as the left offset
+                bottom: 9px;
+                left: 12px;
+                padding: 0;
+                line-height: 1;
+                opacity: 1;
+                background: none;
+                color: #d0d0d0;
+                font-size: 14px;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            }
+        }
+    }
+}
