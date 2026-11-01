@@ -86,6 +86,16 @@ class BoothImage extends DataObject
         return null;
     }
 
+    public function getIsLandscape()
+    {
+        return false;
+    }
+
+    public function getPreviewImage()
+    {
+        return $this->Image()->Fill(1000, 1000);
+    }
+
     public function getFormattedCreationDate()
     {
         return $this->dbObject("Created")->Format("dd.MM.YYYY HH:mm:ss");

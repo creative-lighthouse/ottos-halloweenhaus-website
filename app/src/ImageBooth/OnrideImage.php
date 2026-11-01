@@ -16,4 +16,15 @@ class OnrideImage extends BoothImage
     private static $plural_name = "Onride-Fotos";
 
     private static $url_segment = "onrideimage";
+
+    public function getIsLandscape()
+    {
+        return true;
+    }
+
+    // Shows the whole photo in landscape instead of a square crop
+    public function getPreviewImage()
+    {
+        return $this->Image()->FitMax(1600, 900);
+    }
 }
