@@ -108,7 +108,11 @@ class EventAdmin extends ModelAdmin
     {
         $config = parent::getGridFieldConfig();
 
-        $config->addComponent(BulkManager::create(), 'GridFieldEditButton');
+        $bulkManager = BulkManager::create();
+        if ($this->modelClass === Event::class) {
+            $bulkManager->addBulkAction(SendFeedbackMailBulkHandler::class);
+        }
+        $config->addComponent($bulkManager, 'GridFieldEditButton');
 
         return $config;
     }

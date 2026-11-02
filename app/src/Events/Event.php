@@ -159,15 +159,29 @@ class Event extends DataObject
 
     /**
      * Unique (case-insensitive) addresses of checked-in registrations that
-     * haven't received the thank-you mail yet, mapped to their registration IDs
-     * and the name to address them by (taken from the earliest registration).
+     * haven't received the thank-you mail yet.
      *
-     * @return array<string, array{name: string, ids: int[]}>
+     * @return array<string, array{name: string, ids: int[], events: Event[]}>
      */
     public function getFeedbackMailRecipients(): array
     {
+        return self::collectFeedbackMailRecipients([$this->ID]);
+    }
+
+    /**
+     * Same as getFeedbackMailRecipients(), but across several events, so a
+     * guest who visited more than one of them is still only listed once.
+     * Each address is mapped to its registration IDs, the visited events and
+     * the name to address them by (taken from the earliest registration).
+     *
+     * @param int[] $eventIDs
+     * @return array<string, array{name: string, ids: int[], events: Event[]}>
+     */
+    public static function collectFeedbackMailRecipients(array $eventIDs): array
+    {
         $recipients = [];
-        $registrations = $this->getRegistrations()->filter([
+        $registrations = Registration::get()->filter([
+            "EventID" => $eventIDs ?: [0],
             "Status" => "CheckedIn",
             "FeedbackEmailSent" => null,
         ])->sort("ID", "ASC");
@@ -176,40 +190,64 @@ class Event extends DataObject
             if ($address === "" || $address === "test@test.de" || !filter_var($address, FILTER_VALIDATE_EMAIL)) {
                 continue;
             }
-            $recipients[$address] ??= ["name" => trim((string) $registration->Title), "ids" => []];
+            $recipients[$address] ??= ["name" => trim((string) $registration->Title), "ids" => [], "events" => []];
             $recipients[$address]["ids"][] = $registration->ID;
+            $recipients[$address]["events"][$registration->EventID] ??= $registration->Event();
         }
         return $recipients;
     }
 
     /**
-     * Sends the thank-you mail (linking to the feedback page) once per address.
-     * Registrations are flagged individually, so a re-run after a partial
-     * failure only retries the addresses that didn't go out.
+     * Sends the thank-you mail for the given events and, if every mail went
+     * out, deletes the personal data of all their registrations afterwards.
      *
+     * @param Event[] $events
      * @return array{sent: int, failed: string[]}
      */
-    public function sendFeedbackMails(): array
+    public static function runFeedbackMail(iterable $events): array
+    {
+        $events = is_array($events) ? $events : iterator_to_array($events);
+        $result = self::sendFeedbackMails($events);
+        if (!$result["failed"]) {
+            foreach ($events as $event) {
+                $event->deletePersonalData();
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Sends the thank-you mail (linking to the feedback page) once per address
+     * across all given events. Registrations are flagged individually, so a
+     * re-run after a partial failure only retries the addresses that didn't go out.
+     *
+     * {Event.Title} / {Event.DateFormatted} list all events the recipient
+     * visited, e.g. "Halloween 1 und Halloween 2".
+     *
+     * @param Event[] $events
+     * @return array{sent: int, failed: string[]}
+     */
+    public static function sendFeedbackMails(array $events): array
     {
         $siteConfig = SiteConfig::current_site_config();
-        $vars = [
-            "{Event.Title}" => (string) $this->Title,
-            "{Event.DateFormatted}" => (string) $this->DateFormatted,
-            "{FeedbackLink}" => $this->getFeedbackLink(),
-        ];
-        $subjectTemplate = strtr((string) $siteConfig->FeedbackMessageSubject ?: self::FEEDBACK_DEFAULT_SUBJECT, $vars);
-        $contentTemplate = strtr((string) $siteConfig->FeedbackMessageContent ?: self::FEEDBACK_DEFAULT_CONTENT, $vars);
+        $feedbackLink = self::singleton()->getFeedbackLink();
+        $subjectTemplate = (string) $siteConfig->FeedbackMessageSubject ?: self::FEEDBACK_DEFAULT_SUBJECT;
+        $contentTemplate = (string) $siteConfig->FeedbackMessageContent ?: self::FEEDBACK_DEFAULT_CONTENT;
 
         $sent = 0;
         $failed = [];
-        foreach ($this->getFeedbackMailRecipients() as $address => $recipient) {
-            $nameVars = [
+        $sentPerEvent = [];
+        $recipients = self::collectFeedbackMailRecipients(array_map(fn (Event $event) => $event->ID, $events));
+        foreach ($recipients as $address => $recipient) {
+            $vars = [
                 "{Registration.Title}" => $recipient["name"],
                 "{Registration.Name}" => $recipient["name"],
+                "{Event.Title}" => self::joinList(array_map(fn (Event $event) => (string) $event->Title, $recipient["events"])),
+                "{Event.DateFormatted}" => self::joinList(array_map(fn (Event $event) => (string) $event->DateFormatted, $recipient["events"])),
             ];
-            $subject = strtr($subjectTemplate, $nameVars);
-            // Content is HTML, so the (user-entered) name has to be escaped there
-            $content = strtr($contentTemplate, array_map(fn ($name) => Convert::raw2xml($name), $nameVars));
+            $subject = strtr($subjectTemplate, $vars + ["{FeedbackLink}" => $feedbackLink]);
+            // Content is HTML, so the (user-entered) values have to be escaped there
+            $content = strtr($contentTemplate, array_map(fn ($value) => Convert::raw2xml($value), $vars) + ["{FeedbackLink}" => $feedbackLink]);
 
             try {
                 $email = Email::create();
@@ -219,7 +257,7 @@ class Event extends DataObject
                 EmailNotification::applyLayout($email, [
                     "Subject" => $subject,
                     "Text" => DBField::create_field("HTMLText", $content),
-                    "ButtonLink" => $vars["{FeedbackLink}"],
+                    "ButtonLink" => $feedbackLink,
                     "ButtonText" => "Jetzt Feedback geben",
                     "Signature" => "Dein Team von Ottos Halloweenhaus",
                 ]);
@@ -235,13 +273,30 @@ class Event extends DataObject
                 ->addWhere(['"ID" IN (' . implode(",", array_map("intval", $recipient["ids"])) . ')'])
                 ->execute();
             $sent++;
+            foreach (array_keys($recipient["events"]) as $eventID) {
+                $sentPerEvent[$eventID] = ($sentPerEvent[$eventID] ?? 0) + 1;
+            }
         }
 
-        $this->FeedbackMailSent = date("Y-m-d H:i:s");
-        $this->FeedbackMailCount += $sent;
-        $this->write();
+        foreach ($events as $event) {
+            $event->FeedbackMailSent = date("Y-m-d H:i:s");
+            $event->FeedbackMailCount += $sentPerEvent[$event->ID] ?? 0;
+            $event->write();
+        }
 
         return ["sent" => $sent, "failed" => $failed];
+    }
+
+    /**
+     * "A", "A und B", "A, B und C"
+     *
+     * @param string[] $items
+     */
+    private static function joinList(array $items): string
+    {
+        $items = array_values(array_unique($items));
+        $last = array_pop($items);
+        return $items ? implode(", ", $items) . " und " . $last : (string) $last;
     }
 
     /**
