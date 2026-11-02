@@ -23,6 +23,8 @@ use SilverStripe\Forms\TextField;
  * @property ?string $TicketMessageContent
  * @property ?string $NewRegisterMessageSubject
  * @property ?string $NewRegisterMessageContent
+ * @property ?string $FeedbackMessageSubject
+ * @property ?string $FeedbackMessageContent
  * @property bool $EmailsActive
  * @property ?string $EventAdminEmail
  * @property int $MaxGroupSize
@@ -46,6 +48,8 @@ class CustomSiteConfig extends Extension
         'TicketMessageContent' => 'HTMLText',
         'NewRegisterMessageSubject' => 'Varchar(255)',
         'NewRegisterMessageContent' => 'HTMLText',
+        'FeedbackMessageSubject' => 'Varchar(255)',
+        'FeedbackMessageContent' => 'HTMLText',
         'EmailsActive' => 'Boolean',
         'EventAdminEmail' => 'Varchar(255)',
         "MaxGroupSize" => "Int",
@@ -66,21 +70,34 @@ class CustomSiteConfig extends Extension
         $fields->addFieldToTab("Root.Main", TextField::create("PlaceText", "Place Text"));
         $fields->addFieldToTab("Root.Main", CheckboxField::create("ShowBanner", "Show Banner"));
         $fields->addFieldToTab("Root.Main", TextField::create("BannerText", "Banner Text"));
-        $fields->addFieldToTab("Root.Main", TextField::create("MaxGroupSize", "Maximale Gruppengröße zum registrieren"));
-        $fields->addFieldToTab('Root.Event Emails', CheckboxField::create('EmailsActive', 'E-Mails aktiviert'));
-        $fields->addFieldToTab('Root.Event Emails', TextField::create('EventAdminEmail', 'Event Admin Emailadresse'));
-        $fields->addFieldToTab('Root.Event Emails', TextField::create('AckMessageSubject', 'Empfangsbestätigung Betreff'));
-        $fields->addFieldToTab('Root.Event Emails', HTMLEditorField::create('AckMessageContent', 'Empfangsbestätigung Inhalt'));
-        $fields->addFieldToTab('Root.Event Emails', TextField::create('TicketMessageSubject', 'Ticket-Email Betreff'));
-        $fields->addFieldToTab('Root.Event Emails', HTMLEditorField::create('TicketMessageContent', 'Ticket-Email Inhalt'));
-        $fields->addFieldToTab('Root.Event Emails', TextField::create('NewRegisterMessageSubject', 'Neue Anmeldung Betreff'));
-        $fields->addFieldToTab('Root.Event Emails', HTMLEditorField::create('NewRegisterMessageContent', 'Neue Anmeldung Inhalt'));
         $fields->addFieldToTab('Root.Social Media', TextField::create('SocialTikTok', 'TikTok'));
         $fields->addFieldToTab('Root.Social Media', TextField::create('SocialInstagram', 'Instagram'));
         $fields->addFieldToTab('Root.Social Media', TextField::create('SocialFacebook', 'Facebook'));
         $fields->addFieldToTab('Root.Social Media', TextField::create('SocialLinkedIn', 'LinkedIn'));
         $fields->addFieldToTab('Root.Social Media', TextField::create('SocialYoutube', 'YouTube'));
 
+    }
+
+    /**
+     * Edited in the Events admin (see App\Events\EventAdmin), not in the Settings.
+     */
+    public function getEventSettingsFields(): FieldList
+    {
+        return FieldList::create(
+            TextField::create("MaxGroupSize", "Maximale Gruppengröße zum registrieren"),
+            CheckboxField::create('EmailsActive', 'E-Mails aktiviert'),
+            TextField::create('EventAdminEmail', 'Event Admin Emailadresse'),
+            TextField::create('AckMessageSubject', 'Empfangsbestätigung Betreff'),
+            HTMLEditorField::create('AckMessageContent', 'Empfangsbestätigung Inhalt'),
+            TextField::create('TicketMessageSubject', 'Ticket-Email Betreff'),
+            HTMLEditorField::create('TicketMessageContent', 'Ticket-Email Inhalt'),
+            TextField::create('NewRegisterMessageSubject', 'Neue Anmeldung Betreff'),
+            HTMLEditorField::create('NewRegisterMessageContent', 'Neue Anmeldung Inhalt'),
+            TextField::create('FeedbackMessageSubject', 'Danke-/Feedback-Email Betreff')
+                ->setDescription('Leer lassen für Standardtext. Platzhalter: {Registration.Title}, {Event.Title}, {Event.DateFormatted}'),
+            HTMLEditorField::create('FeedbackMessageContent', 'Danke-/Feedback-Email Inhalt')
+                ->setDescription('Leer lassen für Standardtext. Platzhalter: {Registration.Title}, {Event.Title}, {Event.DateFormatted}, {FeedbackLink}. Bei mehreren Registrierungen mit derselben E-Mail-Adresse wird der Name der ersten verwendet. Button zur Feedback-Seite und Grußformel werden automatisch ergänzt.')
+        );
     }
 
     public function getMaxGroupSizeAsArraySize()

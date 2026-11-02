@@ -96,41 +96,79 @@ class EmailNotification extends DataObject
         // when SiteConfig.EventAdminEmail is not configured). Bailing out keeps
         // the surrounding registration transaction from blowing up.
         if ($this->Email !== "" && $this->Email !== "test@test.de" && filter_var($this->Email, FILTER_VALIDATE_EMAIL)) {
-            $adminEmail = SiteConfig::current_site_config()->EventAdminEmail;
-
             $email = Email::create();
             $email->setTo($this->Email);
+            self::applySender($email);
 
-            // The "From" address must stay on a domain we DKIM/SPF-sign
-            // (SS_ADMIN_EMAIL), otherwise Gmail & co. reject the mail. The
-            // organiser address from the CMS is only used as Reply-To so
-            // attendee replies still reach the team.
-            // Always set From explicitly (with a display name) rather than leaving
-            // it to Silverstripe's own no-reply@<host> fallback, which carries no
-            // name and is what GMX/Web.de tend to flag as spam.
-            $fromAddress = Environment::getEnv('SS_ADMIN_EMAIL')
-                ?: Email::config()->get('admin_email')
-                ?: 'no-reply@' . parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
-            $email->setFrom($fromAddress, "Ottos Halloweenhaus");
-            if ($adminEmail) {
-                $email->setReplyTo($adminEmail);
-            }
-
-            $email->html($this->Text);
-            $email->text($this->Text);
             //if ($this->Attachment()) {
             //    $email->addAttachment($this->Attachment());
             //}
-            $email->setHTMLTemplate('emails/EventEmail');
-            $email->setPlainTemplate('emails/EventEmailPlain');
             $email->setSubject($this->Title);
-            $email->setData([
+            self::applyLayout($email, [
                 "Registration" => $registration,
                 "Subject" => $this->Title,
                 "Text" => DBField::create_field('HTMLText', $this->Text)
             ]);
             $email->send();
         }
+    }
+
+    /**
+     * The "From" address must stay on a domain we DKIM/SPF-sign
+     * (SS_ADMIN_EMAIL), otherwise Gmail & co. reject the mail. The
+     * organiser address from the CMS is only used as Reply-To so
+     * attendee replies still reach the team.
+     * Always set From explicitly (with a display name) rather than leaving
+     * it to Silverstripe's own no-reply@<host> fallback, which carries no
+     * name and is what GMX/Web.de tend to flag as spam.
+     */
+    public static function applySender(Email $email): void
+    {
+        $fromAddress = Environment::getEnv('SS_ADMIN_EMAIL')
+            ?: Email::config()->get('admin_email')
+            ?: 'no-reply@' . parse_url(Director::absoluteBaseURL(), PHP_URL_HOST);
+        $email->setFrom($fromAddress, "Ottos Halloweenhaus");
+
+        $adminEmail = SiteConfig::current_site_config()->EventAdminEmail;
+        if ($adminEmail) {
+            $email->setReplyTo($adminEmail);
+        }
+    }
+
+    /**
+     * Renders the mail in the shared Ottos Halloweenhaus layout (see
+     * templates/emails/BrandedEmail.ss). $data needs "Subject" and "Text",
+     * optionally "ButtonLink"/"ButtonText" and "Signature".
+     *
+     * Images are embedded (cid:) rather than linked: linked images depend on
+     * the request host (wrong when run via sake) and are blocked by many mail
+     * clients until the reader allows remote content.
+     */
+    public static function applyLayout(Email $email, array $data): void
+    {
+        $siteConfig = SiteConfig::current_site_config();
+        $images = array_filter([
+            "logo" => true,
+            "website" => true,
+            "instagram" => (bool) $siteConfig->SocialInstagram,
+            "youtube" => (bool) $siteConfig->SocialYoutube,
+        ]);
+        // Only embed what the template shows, unused ones would appear as attachments
+        foreach (array_keys($images) as $name) {
+            $email->embedFromPath(Director::baseFolder() . "/app/client/images/email/" . $name . ".png", $name, "image/png");
+        }
+
+        $email->setHTMLTemplate('emails/BrandedEmail');
+        $email->setPlainTemplate('emails/BrandedEmailPlain');
+        $email->setData($data + [
+            "WebsiteLink" => Director::absoluteBaseURL(),
+            "InstagramLink" => $siteConfig->SocialInstagram,
+            "YoutubeLink" => $siteConfig->SocialYoutube,
+            "LogoURL" => "cid:logo",
+            "InstagramIconURL" => "cid:instagram",
+            "YoutubeIconURL" => "cid:youtube",
+            "WebsiteIconURL" => "cid:website",
+        ]);
     }
 
     function getDateFormatted()

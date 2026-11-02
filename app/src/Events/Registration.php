@@ -9,6 +9,7 @@ use App\Events\EventAdmin;
 use App\Events\EventTimeSlot;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\Core\Environment;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
@@ -28,6 +29,7 @@ use Endroid\QrCode\ErrorCorrectionLevel;
  * @property ?string $Hash
  * @property ?string $ConfirmEmailSent
  * @property ?string $TicketEmailSent
+ * @property ?string $FeedbackEmailSent
  * @property ?string $Status
  * @property ?string $Type
  * @property ?string $ZIP
@@ -52,6 +54,7 @@ class Registration extends DataObject
         "Hash" => "Varchar(255)",
         "ConfirmEmailSent" => "Datetime",
         "TicketEmailSent" => "Datetime",
+        "FeedbackEmailSent" => "Datetime",
         "Status" => "Varchar(255)",
         "Type" => "Varchar(255)",
         "ZIP" => "Varchar(5)",
@@ -187,7 +190,7 @@ class Registration extends DataObject
     {
         if ($this->Email != "test@test.de") {
 
-            $eventpage = EventPage::get()->first();
+            $eventpage = Versioned::get_by_stage(EventPage::class, Versioned::LIVE)->first();
             $confirmLink = $eventpage->AbsoluteLink("registrationconfirm?event=" . $this->EventID . "&hash=" . $this->Hash . "&securityid=" . $this->ConfirmSecurityID);
 
             // Variablen für Platzhalter
@@ -249,7 +252,7 @@ class Registration extends DataObject
     public function sendTicketEmail()
     {
         if ($this->Email != "test@test.de") {
-            $eventpage = EventPage::get()->first();
+            $eventpage = Versioned::get_by_stage(EventPage::class, Versioned::LIVE)->first();
             $ticketLink = $eventpage->AbsoluteLink("ticket/" . $this->Hash);
 
             // Variablen für Platzhalter
@@ -292,7 +295,7 @@ class Registration extends DataObject
 
     public function getTicketLink()
     {
-        $holder = EventPage::get()->sort("ID", "ASC")->First();
+        $holder = Versioned::get_by_stage(EventPage::class, Versioned::LIVE)->sort("ID", "ASC")->first();
         if ($holder) {
             return $holder->AbsoluteLink("ticket") . "/" . $this->Hash;
         }
@@ -301,7 +304,7 @@ class Registration extends DataObject
 
     public function getUnsubscribeLink()
     {
-        $holder = EventPage::get()->sort("ID", "ASC")->First();
+        $holder = Versioned::get_by_stage(EventPage::class, Versioned::LIVE)->sort("ID", "ASC")->first();
         if ($holder) {
             return $holder->AbsoluteLink("unsubscribe") . "/" . $this->Hash;
         }
@@ -310,7 +313,7 @@ class Registration extends DataObject
 
     public function getValidateLink()
     {
-        $holder = EventPage::get()->sort("ID", "ASC")->First();
+        $holder = Versioned::get_by_stage(EventPage::class, Versioned::LIVE)->sort("ID", "ASC")->first();
         if ($holder) {
             return $holder->AbsoluteLink("ticket") . "/" . $this->Hash;
         }
